@@ -213,6 +213,68 @@ tempCodeRunnerFile.py
 
 # Marimo
 marimo/_static/
+
+# =========================
+# Python
+# =========================
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+
+# =========================
+# Environnements virtuels
+# =========================
+venv/
+.venv/
+env/
+
+# =========================
+# Variables d'environnement
+# =========================
+.env
+.env.*
+!.env.example
+
+# =========================
+# IDE et éditeurs
+# =========================
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# =========================
+# Tests et couverture
+# =========================
+.pytest_cache/
+.coverage
+htmlcov/
+
+# =========================
+# Logs
+# =========================
+*.log
+logs/
+
+# =========================
+# Flask
+# =========================
+instance/
+
+# =========================
+# Système
+# =========================
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# =========================
+# Docker
+# =========================
+*.pid
 marimo/_lsp/
 __marimo__/
 
