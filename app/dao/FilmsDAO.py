@@ -67,25 +67,57 @@ class FilmDAO:
             return None
         return self._hydrate([document])[0]
 
-    def searchFilmsByTitle(self, title: str) -> List[FilmDTO]:
-        """Recherche partielle, insensible à la casse."""
-        query = {"title": {"$regex": re.escape(title), "$options": "i"}}
+    def searchFilms(
+        self,
+        filters: Dict[str, Any],
+        allowedClassificationIds: Optional[List[int]] = None
+    ) -> List[FilmDTO]:
+        """
+        Recherche des films avec plusieurs filtres cumulables.
+
+        Les filtres sont combinés avec une logique ET.
+
+        allowedClassificationIds :
+            None = aucune restriction de classification.
+            []   = aucune classification autorisée.
+            [1, 2] = uniquement les classifications 1 et 2.
+        """
+        query: Dict[str, Any] = {}
+
+        # Recherche partielle sur le titre, insensible à la casse.
+        title = filters.get("title")
+        if title:
+            query["title"] = {
+                "$regex": re.escape(title),
+                "$options": "i"
+            }
+
+        # Correspondance avec les identifiants des entités liées.
+        filterMapping = {
+            "genre": "idGenres",
+            "director": "idDirector",
+            "actor": "idActors",
+            "language": "idLanguages"
+        }
+
+        for filterName, databaseField in filterMapping.items():
+            value = filters.get(filterName)
+
+            if value is not None:
+                query[databaseField] = value
+
+        # Restriction des classifications autorisées pour le compte.
+        if allowedClassificationIds is not None:
+            query["idClassification"] = {
+                "$in": allowedClassificationIds
+            }
+
         return self._findFilms(query)
 
-    def getFilmsByGenre(self, idGenre: int) -> List[FilmDTO]:
-        return self._findFilms({"idGenres": idGenre})
-
-    def getFilmsByDirector(self, idDirector: int) -> List[FilmDTO]:
-        return self._findFilms({"idDirector": idDirector})
-
-    def getFilmsByActor(self, idActor: int) -> List[FilmDTO]:
-        return self._findFilms({"idActors": idActor})
-
-    def getFilmsByLanguage(self, idLanguage: int) -> List[FilmDTO]:
-        return self._findFilms({"idLanguages": idLanguage})
-
     def existsFilm(self, idFilm: str) -> bool:
-        return self._films.count_documents({"idFilm": idFilm}, limit=1) > 0
+        return self._films.count_documents(
+            {"idFilm": idFilm}, limit=1
+        ) > 0
 
     # ------------------------------------------------------------------ #
     # Écriture

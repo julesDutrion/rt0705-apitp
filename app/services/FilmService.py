@@ -1,4 +1,5 @@
-from typing import List
+
+from typing import Any, Dict, List, Optional
 
 from pymongo.errors import DuplicateKeyError
 
@@ -26,34 +27,54 @@ class FilmService:
     # Lecture
     # ------------------------------------------------------------------ #
     def getAllFilms(self) -> List[FilmDTO]:
-        return self._filmDAO.getAllFilms()
+        return self.searchFilms({})
 
-    def searchFilmsByTitle(self, title: str) -> List[FilmDTO]:
-        return self._filmDAO.searchFilmsByTitle(title)
+    def searchFilms(
+        self,
+        filters: Dict[str, Any],
+        allowedClassificationIds: Optional[List[int]] = None
+    ) -> List[FilmDTO]:
+        """
+        Recherche des films selon plusieurs critères cumulables.
 
-    def getFilmById(self, idFilm: str) -> FilmDTO:
+        allowedClassificationIds :
+            None = aucune restriction.
+            [] = aucune classification autorisée.
+            [1, 2] = classifications autorisées.
+        """
+        return self._filmDAO.searchFilms(
+            filters,
+            allowedClassificationIds
+        )
+
+    def getFilmById(
+        self,
+        idFilm: str,
+        allowedClassificationIds: Optional[List[int]] = None
+    ) -> FilmDTO:
         film = self._filmDAO.getFilmById(idFilm)
+
         if film is None:
             raise NotFoundError(f"Film {idFilm} not found")
+
+        # Vérifie que le film est autorisé pour le compte.
+        if (
+            allowedClassificationIds is not None
+            and (
+                film.classification is None
+                or film.classification.idClassification not in allowedClassificationIds
+            )
+        ):
+            raise NotFoundError(f"Film {idFilm} not found")
+
         return film
-
-    def getFilmsByGenre(self, idGenre: int) -> List[FilmDTO]:
-        return self._filmDAO.getFilmsByGenre(idGenre)
-
-    def getFilmsByDirector(self, idDirector: int) -> List[FilmDTO]:
-        return self._filmDAO.getFilmsByDirector(idDirector)
-
-    def getFilmsByActor(self, idActor: int) -> List[FilmDTO]:
-        return self._filmDAO.getFilmsByActor(idActor)
-
-    def getFilmsByLanguage(self, idLanguage: int) -> List[FilmDTO]:
-        return self._filmDAO.getFilmsByLanguage(idLanguage)
 
     # ------------------------------------------------------------------ #
     # Écriture
     # ------------------------------------------------------------------ #
     def createFilm(self, film: FilmDTO) -> FilmDTO:
         self._checkReferences(film)
+
         try:
             return self._filmDAO.createFilm(film)
         except DuplicateKeyError:
@@ -61,8 +82,10 @@ class FilmService:
 
     def updateFilm(self, film: FilmDTO) -> FilmDTO:
         self._checkReferences(film)
+
         if not self._filmDAO.updateFilm(film):
             raise NotFoundError(f"Film {film.idFilm} not found")
+
         return film
 
     def deleteFilm(self, idFilm: str) -> None:
@@ -74,7 +97,9 @@ class FilmService:
     # ------------------------------------------------------------------ #
     def _checkReferences(self, film: FilmDTO) -> None:
         if film.director and not self._directorDAO.exists(film.director.idDirector):
-            raise InvalidReferenceError(f"Director {film.director.idDirector} does not exist")
+            raise InvalidReferenceError(
+                f"Director {film.director.idDirector} does not exist"
+            )
 
         if film.classification and not self._classificationDAO.exists(
             film.classification.idClassification
@@ -92,8 +117,12 @@ class FilmService:
 
         for language in film.languages:
             if not self._languageDAO.exists(language.idLanguage):
-                raise InvalidReferenceError(f"Language {language.idLanguage} does not exist")
+                raise InvalidReferenceError(
+                    f"Language {language.idLanguage} does not exist"
+                )
 
         for genre in film.genre:
             if not self._genreDAO.exists(genre.idGenre):
-                raise InvalidReferenceError(f"Genre {genre.idGenre} does not exist")
+                raise InvalidReferenceError(
+                    f"Genre {genre.idGenre} does not exist"
+                )
