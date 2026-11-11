@@ -280,3 +280,20 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# =========================
+# Docker
+# =========================
+docker-compose.override.yml
+*.tar
+
+# Données locales MongoDB
+mongodb-data/
+mongo-data/
+data/db/
+
+# =========================
+# Déploiement
+# =========================
+*.pem
+*.key
