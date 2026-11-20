@@ -2,7 +2,7 @@ from typing import List
 
 from pymongo.errors import DuplicateKeyError
 
-from dao import GenreDAO
+from ..dao.GenreDAO import GenreDAO
 from ..Exceptions import AlreadyExistsError, NotFoundError
 from ..models.GenreDTO import GenreDTO
 

@@ -9,7 +9,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field, fields, is_dataclass
 from datetime import date
 from typing import Any, Dict, List, Optional
-from models import BaseDTO
+from .BaseDTO import BaseDTO
 
 @dataclass
 class ClassificationDTO(BaseDTO):

@@ -3,7 +3,7 @@
 from flask import Flask, jsonify
 from werkzeug.exceptions import HTTPException
 
-from Exceptions import (
+from .Exceptions import (
     AlreadyExistsError,
     InvalidReferenceError,
     InvalidRequestError,

@@ -11,6 +11,26 @@ def createClassificationBlueprint(
 
     @blueprint.get("")
     def getClassifications():
+        """
+        Récupérer toutes les classifications ou filtrer par âge minimum.
+        ---
+        tags:
+          - Classifications
+        parameters:
+          - name: minAge
+            in: query
+            type: integer
+            required: false
+            description: Filtre les classifications selon leur âge minimum.
+            example: 12
+        responses:
+          200:
+            description: Liste des classifications.
+            schema:
+              type: array
+              items:
+                $ref: '#/definitions/Classification'
+        """
         minAge = request.args.get("minAge", type=int)
         classifications = (
             classificationService.getClassificationsByMinAge(minAge)
@@ -21,11 +41,59 @@ def createClassificationBlueprint(
 
     @blueprint.get("/<int:idClassification>")
     def getClassification(idClassification: int):
+        """
+        Récupérer une classification par son identifiant.
+        ---
+        tags:
+          - Classifications
+        parameters:
+          - name: idClassification
+            in: path
+            type: integer
+            required: true
+            description: Identifiant de la classification.
+        responses:
+          200:
+            description: Classification trouvée.
+            schema:
+              $ref: '#/definitions/Classification'
+          404:
+            description: Classification introuvable.
+            schema:
+              $ref: '#/definitions/Error'
+        """
         classification = classificationService.getClassificationById(idClassification)
         return jsonify(classification.toDict()), 200
 
     @blueprint.post("")
     def createClassification():
+        """
+        Créer une classification.
+        ---
+        tags:
+          - Classifications
+        consumes:
+          - application/json
+        parameters:
+          - in: body
+            name: classification
+            required: true
+            schema:
+              $ref: '#/definitions/Classification'
+        responses:
+          201:
+            description: Classification créée.
+            schema:
+              $ref: '#/definitions/Classification'
+          400:
+            description: Corps JSON absent, invalide ou incomplet.
+            schema:
+              $ref: '#/definitions/Error'
+          409:
+            description: Une classification avec cet identifiant existe déjà.
+            schema:
+              $ref: '#/definitions/Error'
+        """
         data = request.get_json(silent=True)
         if data is None:
             return jsonify({"error": "Invalid JSON body"}), 400

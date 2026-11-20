@@ -3,7 +3,11 @@ from typing import Any, Dict, List, Optional
 
 from pymongo.errors import DuplicateKeyError
 
-from ..dao import ClassificationDAO, DirectorDAO, FilmDAO, GenreDAO, LanguageDAO
+from ..dao import ClassificationDAO
+from ..dao.DirectorDAO import DirectorDAO
+from ..dao.FilmsDAO import FilmDAO
+from ..dao.GenreDAO import GenreDAO
+from ..dao.LanguageDAO import LanguageDAO
 from ..Exceptions import AlreadyExistsError, InvalidReferenceError, NotFoundError
 from ..models.FilmDTO import FilmDTO
 

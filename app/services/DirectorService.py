@@ -2,7 +2,7 @@ from typing import List
 
 from pymongo.errors import DuplicateKeyError
 
-from dao import DirectorDAO
+from ..dao.DirectorDAO import DirectorDAO
 from ..Exceptions import AlreadyExistsError, NotFoundError
 from ..models.DirectorDTO import DirectorDTO
 

@@ -34,21 +34,148 @@ def createFilmBlueprint(filmService: FilmService) -> Blueprint:
 
     @blueprint.get("")
     def getFilms():
+        """
+        Rechercher les films selon un ou plusieurs critères.
+        ---
+        tags:
+          - Films
+        parameters:
+          - name: title
+            in: query
+            type: string
+            required: false
+            description: Titre ou partie du titre recherché.
+          - name: genre
+            in: query
+            type: integer
+            required: false
+            description: Identifiant du genre.
+          - name: director
+            in: query
+            type: integer
+            required: false
+            description: Identifiant du réalisateur.
+          - name: actor
+            in: query
+            type: integer
+            required: false
+            description: Identifiant de l'acteur.
+          - name: language
+            in: query
+            type: integer
+            required: false
+            description: Identifiant de la langue.
+        responses:
+          200:
+            description: Liste des films correspondant aux critères.
+            schema:
+              type: array
+              items:
+                $ref: '#/definitions/Film'
+        """
         films = _findFilms(filmService, request.args)
         return jsonify([film.toDict() for film in films]), 200
 
     @blueprint.get("/<string:idFilm>")
     def getFilm(idFilm: str):
+        """
+        Récupérer un film par son identifiant.
+        ---
+        tags:
+          - Films
+        parameters:
+          - name: idFilm
+            in: path
+            type: string
+            required: true
+            description: Identifiant du film.
+        responses:
+          200:
+            description: Film trouvé.
+            schema:
+              $ref: '#/definitions/Film'
+          404:
+            description: Film introuvable ou non accessible.
+            schema:
+              $ref: '#/definitions/Error'
+        """
         film = filmService.getFilmById(idFilm)
         return jsonify(film.toDict()), 200
 
     @blueprint.post("")
     def createFilm():
+        """
+        Ajouter un film.
+        ---
+        tags:
+          - Films
+        consumes:
+          - application/json
+        parameters:
+          - in: body
+            name: film
+            required: true
+            schema:
+              $ref: '#/definitions/Film'
+        responses:
+          201:
+            description: Film créé.
+            schema:
+              $ref: '#/definitions/Film'
+          400:
+            description: Corps JSON absent, invalide ou incomplet.
+            schema:
+              $ref: '#/definitions/Error'
+          409:
+            description: Un film avec cet identifiant existe déjà.
+            schema:
+              $ref: '#/definitions/Error'
+          422:
+            description: Une référence (réalisateur, classification, langue ou genre) est invalide.
+            schema:
+              $ref: '#/definitions/Error'
+        """
         film = filmService.createFilm(_toFilmDTO(request.get_json(silent=True)))
         return jsonify(film.toDict()), 201
 
     @blueprint.put("/<string:idFilm>")
     def updateFilm(idFilm: str):
+        """
+        Modifier un film existant.
+        ---
+        tags:
+          - Films
+        consumes:
+          - application/json
+        parameters:
+          - name: idFilm
+            in: path
+            type: string
+            required: true
+            description: Identifiant du film à modifier.
+          - in: body
+            name: film
+            required: true
+            schema:
+              $ref: '#/definitions/Film'
+        responses:
+          200:
+            description: Film modifié.
+            schema:
+              $ref: '#/definitions/Film'
+          400:
+            description: Corps JSON invalide ou identifiant URL/corps différent.
+            schema:
+              $ref: '#/definitions/Error'
+          404:
+            description: Film à modifier introuvable.
+            schema:
+              $ref: '#/definitions/Error'
+          422:
+            description: Une référence (réalisateur, classification, langue ou genre) est invalide.
+            schema:
+              $ref: '#/definitions/Error'
+        """
         film = _toFilmDTO(request.get_json(silent=True))
         if film.idFilm != idFilm:
             raise InvalidRequestError("idFilm in the URL and in the body must match")
@@ -57,6 +184,25 @@ def createFilmBlueprint(filmService: FilmService) -> Blueprint:
 
     @blueprint.delete("/<string:idFilm>")
     def deleteFilm(idFilm: str):
+        """
+        Supprimer un film.
+        ---
+        tags:
+          - Films
+        parameters:
+          - name: idFilm
+            in: path
+            type: string
+            required: true
+            description: Identifiant du film à supprimer.
+        responses:
+          204:
+            description: Film supprimé. Aucun contenu n'est renvoyé.
+          404:
+            description: Film introuvable.
+            schema:
+              $ref: '#/definitions/Error'
+        """
         filmService.deleteFilm(idFilm)
         return "", 204
 

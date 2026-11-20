@@ -9,7 +9,9 @@ from __future__ import annotations
 from dataclasses import dataclass, field, fields, is_dataclass
 from datetime import date
 from typing import Any, Dict, List, Optional
-from models import BaseDTO, RoleDTO
+
+from .BaseDTO import BaseDTO
+from .RoleDTO import RoleDTO
 
 
 
