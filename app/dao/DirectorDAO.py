@@ -1,10 +1,10 @@
 import re
 from typing import List, Optional
 
-from pymongo import ASCENDING
+from pymongo import ASCENDING, DESCENDING
 from pymongo.database import Database
 
-from ..models.DirectorDTO import DirectorDTO
+from ..models import DirectorDTO
 
 _NO_MONGO_ID = {"_id": 0}
 
@@ -34,7 +34,16 @@ class DirectorDAO:
         return self._find({"$or": [{"lastName": pattern}, {"firstName": pattern}]})
 
     def create(self, director: DirectorDTO) -> DirectorDTO:
-        """Lève DuplicateKeyError si idDirector existe déjà."""
+        """Génère un identifiant entier absent de la collection."""
+        if director.idDirector is None:
+            document = self._collection.find_one(
+                {}, {"idDirector": 1, "_id": 0},
+                sort=[("idDirector", DESCENDING)],
+            )
+            nextId = (document["idDirector"] + 1) if document else 1
+            while self.exists(nextId):
+                nextId += 1
+            director.idDirector = nextId
         self._collection.insert_one(director.toDict())
         return director
 

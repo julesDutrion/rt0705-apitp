@@ -1,9 +1,9 @@
 from typing import List, Optional
 
-from pymongo import ASCENDING
+from pymongo import ASCENDING, DESCENDING
 from pymongo.database import Database
 
-from ..models.ClassificationDTO import ClassificationDTO
+from ..models import ClassificationDTO
 
 _NO_MONGO_ID = {"_id": 0}
 
@@ -32,7 +32,16 @@ class ClassificationDAO:
         return self._find({"minAge": minAge})
 
     def create(self, classification: ClassificationDTO) -> ClassificationDTO:
-        """Lève DuplicateKeyError si idClassification existe déjà."""
+        """Génère un identifiant entier absent de la collection."""
+        if classification.idClassification is None:
+            document = self._collection.find_one(
+                {}, {"idClassification": 1, "_id": 0},
+                sort=[("idClassification", DESCENDING)],
+            )
+            nextId = (document["idClassification"] + 1) if document else 1
+            while self.exists(nextId):
+                nextId += 1
+            classification.idClassification = nextId
         self._collection.insert_one(classification.toDict())
         return classification
 

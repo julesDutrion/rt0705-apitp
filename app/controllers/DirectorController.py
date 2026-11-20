@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify, request
 
-from ..models.DirectorDTO import DirectorDTO
-from ..services.DirectorService import DirectorService
+from ..models import DirectorDTO
+from ..services import DirectorService
 
 
 def createDirectorBlueprint(directorService: DirectorService) -> Blueprint:
@@ -77,7 +77,7 @@ def createDirectorBlueprint(directorService: DirectorService) -> Blueprint:
             name: director
             required: true
             schema:
-              $ref: '#/definitions/Director'
+              $ref: '#/definitions/DirectorInput'
         responses:
           201:
             description: Réalisateur créé.
@@ -96,7 +96,7 @@ def createDirectorBlueprint(directorService: DirectorService) -> Blueprint:
         if data is None:
             return jsonify({"error": "Invalid JSON body"}), 400
         try:
-            director = DirectorDTO.fromDict(data)
+            director = DirectorDTO.fromDictWithoutId(data)
         except (KeyError, TypeError) as e:
             return jsonify({"error": f"Invalid or missing field: {e}"}), 400
         directorService.createDirector(director)

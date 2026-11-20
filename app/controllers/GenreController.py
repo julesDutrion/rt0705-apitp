@@ -3,15 +3,15 @@ from typing import Any
 from flask import Blueprint, jsonify, request
 
 from ..Exceptions import InvalidRequestError
-from ..models.GenreDTO import GenreDTO
-from ..services.GenreService import GenreService
+from ..models import GenreDTO
+from ..services import GenreService
 
 
 def _toGenreDTO(data: Any) -> GenreDTO:
     if not isinstance(data, dict):
         raise InvalidRequestError("Invalid JSON body")
     try:
-        return GenreDTO.fromDict(data)
+        return GenreDTO.fromDictWithoutId(data)
     except (KeyError, TypeError) as e:
         raise InvalidRequestError(f"Invalid or missing field: {e}")
 
@@ -87,7 +87,7 @@ def createGenreBlueprint(genreService: GenreService) -> Blueprint:
             name: genre
             required: true
             schema:
-              $ref: '#/definitions/Genre'
+              $ref: '#/definitions/GenreInput'
         responses:
           201:
             description: Genre créé.

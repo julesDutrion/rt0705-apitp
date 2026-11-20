@@ -3,15 +3,15 @@ from typing import Any
 from flask import Blueprint, jsonify, request
  
 from ..Exceptions import InvalidRequestError
-from ..models.LanguageDTO import LanguageDTO
-from ..services.LanguageService import LanguageService
+from ..models import LanguageDTO
+from ..services import LanguageService
  
  
 def _toLanguageDTO(data: Any) -> LanguageDTO:
     if not isinstance(data, dict):
         raise InvalidRequestError("Invalid JSON body")
     try:
-        return LanguageDTO.fromDict(data)
+        return LanguageDTO.fromDictWithoutId(data)
     except (KeyError, TypeError) as e:
         raise InvalidRequestError(f"Invalid or missing field: {e}")
  
@@ -104,7 +104,7 @@ def createLanguageBlueprint(languageService: LanguageService) -> Blueprint:
             name: language
             required: true
             schema:
-              $ref: '#/definitions/Language'
+              $ref: '#/definitions/LanguageInput'
         responses:
           201:
             description: Langue créée.

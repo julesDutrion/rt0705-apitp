@@ -2,9 +2,9 @@ from typing import List
 
 from pymongo.errors import DuplicateKeyError
 
-from ..dao.GenreDAO import GenreDAO
+from ..dao import GenreDAO
 from ..Exceptions import AlreadyExistsError, NotFoundError
-from ..models.GenreDTO import GenreDTO
+from ..models import GenreDTO
 
 
 class GenreService:

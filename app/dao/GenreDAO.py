@@ -1,10 +1,10 @@
 import re
 from typing import List, Optional
 
-from pymongo import ASCENDING
+from pymongo import ASCENDING, DESCENDING
 from pymongo.database import Database
 
-from ..models.GenreDTO import GenreDTO
+from ..models import GenreDTO
 
 _NO_MONGO_ID = {"_id": 0}
 
@@ -31,7 +31,16 @@ class GenreDAO:
         return self._find({"nameGenre": pattern})
 
     def create(self, genre: GenreDTO) -> GenreDTO:
-        """Lève DuplicateKeyError si idGenre existe déjà."""
+        """Génère un identifiant entier absent de la collection."""
+        if genre.idGenre is None:
+            document = self._collection.find_one(
+                {}, {"idGenre": 1, "_id": 0},
+                sort=[("idGenre", DESCENDING)],
+            )
+            nextId = (document["idGenre"] + 1) if document else 1
+            while self.exists(nextId):
+                nextId += 1
+            genre.idGenre = nextId
         self._collection.insert_one(genre.toDict())
         return genre
 

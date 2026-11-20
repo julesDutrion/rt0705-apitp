@@ -13,14 +13,19 @@ from .BaseDTO import BaseDTO
 
 @dataclass
 class DirectorDTO(BaseDTO):
-    idDirector: int
     lastName: str
     firstName: str
+    idDirector: Optional[int] = None
+    ID_FIELDS = frozenset({"idDirector"})
 
     @classmethod
     def fromDict(cls, data: Dict[str, Any]) -> "DirectorDTO":
         return cls(
-            idDirector=data["idDirector"],
+            idDirector=data.get("idDirector"),
             lastName=data["lastName"],
             firstName=data["firstName"],
         )
+
+    @classmethod
+    def fromDictWithoutId(cls, data: Dict[str, Any]) -> "DirectorDTO":
+        return cls(lastName=data["lastName"], firstName=data["firstName"])

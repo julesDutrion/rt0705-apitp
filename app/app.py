@@ -9,25 +9,31 @@ from pymongo import MongoClient
 from .config.database import database as DATABASE_NAME
 from .config.database import uri as MONGO_URI
 
-from .controllers.ClassificationController import createClassificationBlueprint
-from .controllers.DirectorController import createDirectorBlueprint
-from .controllers.FilmController import createFilmBlueprint
-from .controllers.GenreController import createGenreBlueprint
-from .controllers.LanguageController import createLanguageBlueprint
+from .controllers import (
+    createClassificationBlueprint,
+    createDirectorBlueprint,
+    createFilmBlueprint,
+    createGenreBlueprint,
+    createLanguageBlueprint,
+)
 
 '''Listes des daos'''
-from .dao.ClassificationDAO import ClassificationDAO
-from .dao.DirectorDAO import DirectorDAO
-from .dao.FilmsDAO import FilmDAO
-from .dao.GenreDAO import GenreDAO
-from .dao.LanguageDAO import LanguageDAO
+from .dao import (
+    ClassificationDAO,
+    DirectorDAO,
+    FilmDAO,
+    GenreDAO,
+    LanguageDAO,
+)
 
 '''Listes des services'''
-from .services.LanguageService import LanguageService
-from .services.FilmService import FilmService
-from .services.GenreService import GenreService
-from .services.ClassificationServcie import ClassificationService
-from .services.DirectorService import DirectorService
+from .services import (
+    ClassificationService,
+    DirectorService,
+    FilmService,
+    GenreService,
+    LanguageService,
+)
 
 from .ErrorHandlers import registerErrorHandlers
 
@@ -58,11 +64,26 @@ def createApp() -> Flask:
                         "minAge": {"type": "integer", "example": 12},
                     },
                 },
+                "ClassificationInput": {
+                    "type": "object",
+                    "required": ["minAge"],
+                    "properties": {
+                        "minAge": {"type": "integer", "example": 12},
+                    },
+                },
                 "Director": {
                     "type": "object",
                     "required": ["idDirector", "lastName", "firstName"],
                     "properties": {
                         "idDirector": {"type": "integer", "example": 1},
+                        "lastName": {"type": "string", "example": "Nolan"},
+                        "firstName": {"type": "string", "example": "Christopher"},
+                    },
+                },
+                "DirectorInput": {
+                    "type": "object",
+                    "required": ["lastName", "firstName"],
+                    "properties": {
                         "lastName": {"type": "string", "example": "Nolan"},
                         "firstName": {"type": "string", "example": "Christopher"},
                     },
@@ -75,11 +96,26 @@ def createApp() -> Flask:
                         "nameGenre": {"type": "string", "example": "Science-fiction"},
                     },
                 },
+                "GenreInput": {
+                    "type": "object",
+                    "required": ["nameGenre"],
+                    "properties": {
+                        "nameGenre": {"type": "string", "example": "Science-fiction"},
+                    },
+                },
                 "Language": {
                     "type": "object",
                     "required": ["idLanguage", "code", "name"],
                     "properties": {
                         "idLanguage": {"type": "integer", "example": 1},
+                        "code": {"type": "string", "example": "fr"},
+                        "name": {"type": "string", "example": "Français"},
+                    },
+                },
+                "LanguageInput": {
+                    "type": "object",
+                    "required": ["code", "name"],
+                    "properties": {
                         "code": {"type": "string", "example": "fr"},
                         "name": {"type": "string", "example": "Français"},
                     },
@@ -93,6 +129,14 @@ def createApp() -> Flask:
                         "lastName": {"type": "string", "example": "DiCaprio"},
                     },
                 },
+                "ActorInput": {
+                    "type": "object",
+                    "required": ["firstName", "lastName"],
+                    "properties": {
+                        "firstName": {"type": "string", "example": "Leonardo"},
+                        "lastName": {"type": "string", "example": "DiCaprio"},
+                    },
+                },
                 "Support": {
                     "type": "object",
                     "required": ["idSupport", "storageLocation", "filePath", "fileSize", "fileFormat"],
@@ -102,6 +146,58 @@ def createApp() -> Flask:
                         "filePath": {"type": "string", "example": "/films/interstellar.mp4"},
                         "fileSize": {"type": "integer", "example": 1500000000},
                         "fileFormat": {"type": "string", "example": "mp4"},
+                    },
+                },
+                "SupportInput": {
+                    "type": "object",
+                    "required": ["storageLocation", "filePath", "fileSize", "fileFormat"],
+                    "properties": {
+                        "storageLocation": {"type": "string", "example": "local"},
+                        "filePath": {"type": "string", "example": "/films/interstellar.mp4"},
+                        "fileSize": {"type": "integer", "example": 1500000000},
+                        "fileFormat": {"type": "string", "example": "mp4"},
+                    },
+                },
+                "DirectorReference": {
+                    "type": "object",
+                    "required": ["idDirector"],
+                    "properties": {
+                        "idDirector": {"type": "integer", "example": 1},
+                    },
+                },
+                "ClassificationReference": {
+                    "type": "object",
+                    "required": ["idClassification"],
+                    "properties": {
+                        "idClassification": {"type": "integer", "example": 1},
+                    },
+                },
+                "SupportReference": {
+                    "type": "object",
+                    "required": ["idSupport"],
+                    "properties": {
+                        "idSupport": {"type": "integer", "example": 1},
+                    },
+                },
+                "LanguageReference": {
+                    "type": "object",
+                    "required": ["idLanguage"],
+                    "properties": {
+                        "idLanguage": {"type": "integer", "example": 1},
+                    },
+                },
+                "GenreReference": {
+                    "type": "object",
+                    "required": ["idGenre"],
+                    "properties": {
+                        "idGenre": {"type": "integer", "example": 1},
+                    },
+                },
+                "ActorReference": {
+                    "type": "object",
+                    "required": ["idActor"],
+                    "properties": {
+                        "idActor": {"type": "integer", "example": 1},
                     },
                 },
                 "Film": {
@@ -122,6 +218,25 @@ def createApp() -> Flask:
                         "languages": {"type": "array", "items": {"$ref": "#/definitions/Language"}},
                         "genre": {"type": "array", "items": {"$ref": "#/definitions/Genre"}},
                         "actors": {"type": "array", "items": {"$ref": "#/definitions/Actor"}},
+                    },
+                },
+                "FilmInput": {
+                    "type": "object",
+                    "required": ["title", "synopsis", "releaseDate", "duration", "posterUrl", "addedDate"],
+                    "properties": {
+                        "title": {"type": "string", "example": "Interstellar"},
+                        "synopsis": {"type": "string", "example": "Un voyage au-delà de notre système solaire."},
+                        "releaseDate": {"type": "string", "format": "date", "example": "2014-11-05"},
+                        "duration": {"type": "integer", "example": 169},
+                        "posterUrl": {"type": "string", "example": "https://example.com/interstellar.jpg"},
+                        "addedDate": {"type": "string", "format": "date", "example": "2026-11-20"},
+                        "director": {"$ref": "#/definitions/DirectorReference"},
+                        "classification": {"$ref": "#/definitions/ClassificationReference"},
+                        "support": {"$ref": "#/definitions/SupportReference"},
+                        "nativeLanguage": {"$ref": "#/definitions/LanguageReference"},
+                        "languages": {"type": "array", "items": {"$ref": "#/definitions/LanguageReference"}},
+                        "genre": {"type": "array", "items": {"$ref": "#/definitions/GenreReference"}},
+                        "actors": {"type": "array", "items": {"$ref": "#/definitions/ActorReference"}},
                     },
                 },
             },

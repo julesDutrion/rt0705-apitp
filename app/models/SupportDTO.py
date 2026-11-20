@@ -13,16 +13,26 @@ from .BaseDTO import BaseDTO
 
 @dataclass
 class SupportDTO(BaseDTO):
-    idSupport: int
     storageLocation: str
     filePath: str
     fileSize: int
     fileFormat: str
+    idSupport: Optional[int] = None
+    ID_FIELDS = frozenset({"idSupport"})
 
     @classmethod
     def fromDict(cls, data: Dict[str, Any]) -> "SupportDTO":
         return cls(
-            idSupport=data["idSupport"],
+            idSupport=data.get("idSupport"),
+            storageLocation=data["storageLocation"],
+            filePath=data["filePath"],
+            fileSize=data["fileSize"],
+            fileFormat=data["fileFormat"],
+        )
+
+    @classmethod
+    def fromDictWithoutId(cls, data: Dict[str, Any]) -> "SupportDTO":
+        return cls(
             storageLocation=data["storageLocation"],
             filePath=data["filePath"],
             fileSize=data["fileSize"],

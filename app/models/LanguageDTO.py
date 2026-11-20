@@ -13,14 +13,19 @@ from .BaseDTO import BaseDTO
 
 @dataclass
 class LanguageDTO(BaseDTO):
-    idLanguage: int
     code: str
     name: str
+    idLanguage: Optional[int] = None
+    ID_FIELDS = frozenset({"idLanguage"})
 
     @classmethod
     def fromDict(cls, data: Dict[str, Any]) -> "LanguageDTO":
         return cls(
-            idLanguage=data["idLanguage"],
+            idLanguage=data.get("idLanguage"),
             code=data["code"],
             name=data["name"],
         )
+
+    @classmethod
+    def fromDictWithoutId(cls, data: Dict[str, Any]) -> "LanguageDTO":
+        return cls(code=data["code"], name=data["name"])

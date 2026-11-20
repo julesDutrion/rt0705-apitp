@@ -8,6 +8,7 @@ construit des FilmDTO complets (hydratation).
 from __future__ import annotations
 
 import re
+import uuid
 from datetime import date
 from typing import Any, Dict, Iterable, List, Optional, Type
 
@@ -16,14 +17,16 @@ from pymongo.collection import Collection
 from pymongo.database import Database
 
 
-from ..models.LanguageDTO import LanguageDTO
-from ..models.ActorDTO import ActorDTO
-from ..models.BaseDTO import BaseDTO
-from ..models.ClassificationDTO import ClassificationDTO
-from ..models.DirectorDTO import DirectorDTO
-from ..models.FilmDTO import FilmDTO
-from ..models.GenreDTO import GenreDTO
-from ..models.SupportDTO import SupportDTO
+from ..models import (
+    ActorDTO,
+    BaseDTO,
+    ClassificationDTO,
+    DirectorDTO,
+    FilmDTO,
+    GenreDTO,
+    LanguageDTO,
+    SupportDTO,
+)
 
 # On n'expose jamais l'_id interne de MongoDB : l'identifiant métier est idFilm.
 _NO_MONGO_ID: Dict[str, int] = {"_id": 0}
@@ -123,7 +126,13 @@ class FilmDAO:
     # Écriture
     # ------------------------------------------------------------------ #
     def createFilm(self, film: FilmDTO) -> FilmDTO:
-        """Insère un film (ids uniquement). Lève DuplicateKeyError si idFilm existe."""
+        """Génère un identifiant UUID absent de la collection."""
+        if film.idFilm is None:
+            while True:
+                candidate = str(uuid.uuid4())
+                if not self.existsFilm(candidate):
+                    film.idFilm = candidate
+                    break
         self._films.insert_one(self._toDocument(film))
         return film
 

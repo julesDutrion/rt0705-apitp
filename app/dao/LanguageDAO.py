@@ -1,9 +1,9 @@
 from typing import List, Optional
 
-from pymongo import ASCENDING
+from pymongo import ASCENDING, DESCENDING
 from pymongo.database import Database
 
-from ..models.LanguageDTO import LanguageDTO
+from ..models import LanguageDTO
 
 _NO_MONGO_ID = {"_id": 0}
 
@@ -32,6 +32,15 @@ class LanguageDAO:
         return LanguageDTO.fromDict(document) if document else None
 
     def create(self, language: LanguageDTO) -> LanguageDTO:
-        """Lève DuplicateKeyError si idLanguage existe déjà."""
+        """Génère un identifiant entier absent de la collection."""
+        if language.idLanguage is None:
+            document = self._collection.find_one(
+                {}, {"idLanguage": 1, "_id": 0},
+                sort=[("idLanguage", DESCENDING)],
+            )
+            nextId = (document["idLanguage"] + 1) if document else 1
+            while self.exists(nextId):
+                nextId += 1
+            language.idLanguage = nextId
         self._collection.insert_one(language.toDict())
         return language

@@ -13,12 +13,17 @@ from .BaseDTO import BaseDTO
 
 @dataclass
 class ClassificationDTO(BaseDTO):
-    idClassification: int
     minAge: int
+    idClassification: Optional[int] = None
+    ID_FIELDS = frozenset({"idClassification"})
 
     @classmethod
     def fromDict(cls, data: Dict[str, Any]) -> "ClassificationDTO":
         return cls(
-            idClassification=data["idClassification"],
+            idClassification=data.get("idClassification"),
             minAge=data["minAge"],
         )
+
+    @classmethod
+    def fromDictWithoutId(cls, data: Dict[str, Any]) -> "ClassificationDTO":
+        return cls(minAge=data["minAge"])

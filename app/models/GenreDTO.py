@@ -13,9 +13,14 @@ from .BaseDTO import BaseDTO
 
 @dataclass
 class GenreDTO(BaseDTO):
-    idGenre: int
     nameGenre: str
+    idGenre: Optional[int] = None
+    ID_FIELDS = frozenset({"idGenre"})
 
     @classmethod
     def fromDict(cls, data: Dict[str, Any]) -> "GenreDTO":
-        return cls(idGenre=data["idGenre"], nameGenre=data["nameGenre"])
+        return cls(idGenre=data.get("idGenre"), nameGenre=data["nameGenre"])
+
+    @classmethod
+    def fromDictWithoutId(cls, data: Dict[str, Any]) -> "GenreDTO":
+        return cls(nameGenre=data["nameGenre"])

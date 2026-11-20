@@ -9,13 +9,18 @@ from __future__ import annotations
 from dataclasses import dataclass, field, fields, is_dataclass
 from datetime import date
 from typing import Any, Dict, List, Optional
-from models import BaseDTO
+from .BaseDTO import BaseDTO
 
 @dataclass
 class RoleDTO(BaseDTO):
-    idRole: int
     roleName: str
+    idRole: Optional[int] = None
+    ID_FIELDS = frozenset({"idRole"})
 
     @classmethod
     def fromDict(cls, data: Dict[str, Any]) -> "RoleDTO":
-        return cls(idRole=data["idRole"], roleName=data["roleName"])
+        return cls(idRole=data.get("idRole"), roleName=data["roleName"])
+
+    @classmethod
+    def fromDictWithoutId(cls, data: Dict[str, Any]) -> "RoleDTO":
+        return cls(roleName=data["roleName"])

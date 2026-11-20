@@ -2,9 +2,9 @@ from typing import List
 
 from pymongo.errors import DuplicateKeyError
 
-from ..dao.ClassificationDAO import ClassificationDAO
+from ..dao import ClassificationDAO
 from ..Exceptions import AlreadyExistsError, NotFoundError
-from ..models.ClassificationDTO import ClassificationDTO
+from ..models import ClassificationDTO
 
 
 class ClassificationService:

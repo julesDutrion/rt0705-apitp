@@ -4,15 +4,15 @@ from flask import Blueprint, jsonify, request
 from werkzeug.datastructures import MultiDict
 
 from ..Exceptions import InvalidRequestError
-from ..models.FilmDTO import FilmDTO
-from ..services.FilmService import FilmService
+from ..models import FilmDTO
+from ..services import FilmService
 
 
 def _toFilmDTO(data: Any) -> FilmDTO:
     if not isinstance(data, dict):
         raise InvalidRequestError("Invalid JSON body")
     try:
-        return FilmDTO.fromDict(data)
+        return FilmDTO.fromDictWithoutId(data)
     except (KeyError, TypeError, ValueError) as e:
         raise InvalidRequestError(f"Invalid or missing field: {e}")
 
@@ -116,7 +116,7 @@ def createFilmBlueprint(filmService: FilmService) -> Blueprint:
             name: film
             required: true
             schema:
-              $ref: '#/definitions/Film'
+              $ref: '#/definitions/FilmInput'
         responses:
           201:
             description: Film créé.
@@ -157,7 +157,7 @@ def createFilmBlueprint(filmService: FilmService) -> Blueprint:
             name: film
             required: true
             schema:
-              $ref: '#/definitions/Film'
+              $ref: '#/definitions/FilmInput'
         responses:
           200:
             description: Film modifié.
@@ -176,9 +176,11 @@ def createFilmBlueprint(filmService: FilmService) -> Blueprint:
             schema:
               $ref: '#/definitions/Error'
         """
-        film = _toFilmDTO(request.get_json(silent=True))
-        if film.idFilm != idFilm:
+        data = request.get_json(silent=True)
+        if isinstance(data, dict) and "idFilm" in data and data["idFilm"] != idFilm:
             raise InvalidRequestError("idFilm in the URL and in the body must match")
+        film = _toFilmDTO(data)
+        film.idFilm = idFilm
         updatedFilm = filmService.updateFilm(film)
         return jsonify(updatedFilm.toDict()), 200
 

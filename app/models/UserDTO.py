@@ -33,6 +33,23 @@ class UserDTO(BaseDTO):
             age=data["age"],
         )
 
+    @classmethod
+    def fromDictWithoutId(cls, data: Dict[str, Any]) -> "UserDTO":
+        role = data["role"]
+        if isinstance(role, dict) and "idRole" in role and len(role) == 1:
+            roleDTO = RoleDTO(idRole=role["idRole"], roleName="")
+        elif isinstance(role, dict) and "roleName" in role:
+            roleDTO = RoleDTO.fromDict(role)
+        else:
+            roleDTO = RoleDTO.fromDictWithoutId(role)
+        return cls(
+            role=roleDTO,
+            userName=data["userName"],
+            email=data["email"],
+            passwordHash=data["passwordHash"],
+            age=data["age"],
+        )
+
     def toPublicDict(self) -> Dict[str, Any]:
         """Version à renvoyer au client : sans le hash du mot de passe."""
         data = self.toDict()

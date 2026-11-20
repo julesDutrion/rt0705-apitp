@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify, request
 
-from ..models.ClassificationDTO import ClassificationDTO
-from ..services.ClassificationServcie import ClassificationService
+from ..models import ClassificationDTO
+from ..services import ClassificationService
 
 
 def createClassificationBlueprint(
@@ -79,7 +79,7 @@ def createClassificationBlueprint(
             name: classification
             required: true
             schema:
-              $ref: '#/definitions/Classification'
+              $ref: '#/definitions/ClassificationInput'
         responses:
           201:
             description: Classification créée.
@@ -98,7 +98,7 @@ def createClassificationBlueprint(
         if data is None:
             return jsonify({"error": "Invalid JSON body"}), 400
         try:
-            classification = ClassificationDTO.fromDict(data)
+            classification = ClassificationDTO.fromDictWithoutId(data)
         except (KeyError, TypeError) as e:
             return jsonify({"error": f"Invalid or missing field: {e}"}), 400
         classificationService.createClassification(classification)

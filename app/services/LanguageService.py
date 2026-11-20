@@ -2,9 +2,9 @@ from typing import List
 
 from pymongo.errors import DuplicateKeyError
 
-from ..dao.LanguageDAO import LanguageDAO
+from ..dao import LanguageDAO
 from ..Exceptions import AlreadyExistsError, NotFoundError
-from ..models.LanguageDTO import LanguageDTO
+from ..models import LanguageDTO
 
 
 class LanguageService:
