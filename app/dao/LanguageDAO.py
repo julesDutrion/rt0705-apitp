@@ -44,3 +44,14 @@ class LanguageDAO:
             language.idLanguage = nextId
         self._collection.insert_one(language.toDict())
         return language
+
+    def update(self, language: LanguageDTO) -> bool:
+        language.code = language.code.lower()
+        result = self._collection.replace_one(
+            {"idLanguage": language.idLanguage}, language.toDict()
+        )
+        return result.matched_count == 1
+
+    def delete(self, idLanguage: int) -> bool:
+        result = self._collection.delete_one({"idLanguage": idLanguage})
+        return result.deleted_count == 1

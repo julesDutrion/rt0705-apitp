@@ -12,8 +12,8 @@ def _toGenreDTO(data: Any) -> GenreDTO:
         raise InvalidRequestError("Invalid JSON body")
     try:
         return GenreDTO.fromDictWithoutId(data)
-    except (KeyError, TypeError) as e:
-        raise InvalidRequestError(f"Invalid or missing field: {e}")
+    except (KeyError, TypeError, ValueError) as error:
+        raise InvalidRequestError(f"Invalid or missing field: {error}")
 
 
 def createGenreBlueprint(genreService: GenreService) -> Blueprint:
@@ -43,7 +43,9 @@ def createGenreBlueprint(genreService: GenreService) -> Blueprint:
         """
         name = request.args.get("name")
         genres = (
-            genreService.searchGenresByName(name) if name else genreService.getAllGenres()
+            genreService.searchGenresByName(name)
+            if name
+            else genreService.getAllGenres()
         )
         return jsonify([genre.toDict() for genre in genres]), 200
 
@@ -98,11 +100,77 @@ def createGenreBlueprint(genreService: GenreService) -> Blueprint:
             schema:
               $ref: '#/definitions/Error'
           409:
-            description: Un genre avec cet identifiant existe déjà.
+            description: Conflit d'identifiant.
             schema:
               $ref: '#/definitions/Error'
         """
         genre = genreService.createGenre(_toGenreDTO(request.get_json(silent=True)))
         return jsonify(genre.toDict()), 201
+
+    @blueprint.put("/<int:idGenre>")
+    def updateGenre(idGenre: int):
+        """
+        Remplacer un genre existant.
+        ---
+        tags:
+          - Genres
+        consumes:
+          - application/json
+        parameters:
+          - name: idGenre
+            in: path
+            type: integer
+            required: true
+            description: Identifiant du genre à modifier.
+          - in: body
+            name: genre
+            required: true
+            schema:
+              $ref: '#/definitions/GenreInput'
+        responses:
+          200:
+            description: Genre modifié.
+            schema:
+              $ref: '#/definitions/Genre'
+          400:
+            description: Corps invalide ou identifiant URL/corps différent.
+            schema:
+              $ref: '#/definitions/Error'
+          404:
+            description: Genre introuvable.
+            schema:
+              $ref: '#/definitions/Error'
+        """
+        data = request.get_json(silent=True)
+        if isinstance(data, dict) and "idGenre" in data and data["idGenre"] != idGenre:
+            raise InvalidRequestError("idGenre in the URL and in the body must match")
+        genre = _toGenreDTO(data)
+        genre.idGenre = idGenre
+        updatedGenre = genreService.updateGenre(genre)
+        return jsonify(updatedGenre.toDict()), 200
+
+    @blueprint.delete("/<int:idGenre>")
+    def deleteGenre(idGenre: int):
+        """
+        Supprimer un genre.
+        ---
+        tags:
+          - Genres
+        parameters:
+          - name: idGenre
+            in: path
+            type: integer
+            required: true
+            description: Identifiant du genre à supprimer.
+        responses:
+          204:
+            description: Genre supprimé.
+          404:
+            description: Genre introuvable.
+            schema:
+              $ref: '#/definitions/Error'
+        """
+        genreService.deleteGenre(idGenre)
+        return "", 204
 
     return blueprint

@@ -1,24 +1,24 @@
 from typing import Any
- 
+
 from flask import Blueprint, jsonify, request
- 
+
 from ..Exceptions import InvalidRequestError
 from ..models import LanguageDTO
 from ..services import LanguageService
- 
- 
+
+
 def _toLanguageDTO(data: Any) -> LanguageDTO:
     if not isinstance(data, dict):
         raise InvalidRequestError("Invalid JSON body")
     try:
         return LanguageDTO.fromDictWithoutId(data)
-    except (KeyError, TypeError) as e:
-        raise InvalidRequestError(f"Invalid or missing field: {e}")
- 
- 
+    except (KeyError, TypeError, ValueError) as error:
+        raise InvalidRequestError(f"Invalid or missing field: {error}")
+
+
 def createLanguageBlueprint(languageService: LanguageService) -> Blueprint:
     blueprint = Blueprint("languages", __name__, url_prefix="/languages")
- 
+
     @blueprint.get("")
     def getLanguages():
         """
@@ -36,7 +36,7 @@ def createLanguageBlueprint(languageService: LanguageService) -> Blueprint:
         """
         languages = languageService.getAllLanguages()
         return jsonify([language.toDict() for language in languages]), 200
- 
+
     @blueprint.get("/<int:idLanguage>")
     def getLanguage(idLanguage: int):
         """
@@ -62,7 +62,7 @@ def createLanguageBlueprint(languageService: LanguageService) -> Blueprint:
         """
         language = languageService.getLanguageById(idLanguage)
         return jsonify(language.toDict()), 200
- 
+
     @blueprint.get("/code/<string:code>")
     def getLanguageByCode(code: str):
         """
@@ -89,7 +89,7 @@ def createLanguageBlueprint(languageService: LanguageService) -> Blueprint:
         """
         language = languageService.getLanguageByCode(code)
         return jsonify(language.toDict()), 200
- 
+
     @blueprint.post("")
     def createLanguage():
         """
@@ -115,7 +115,7 @@ def createLanguageBlueprint(languageService: LanguageService) -> Blueprint:
             schema:
               $ref: '#/definitions/Error'
           409:
-            description: Une langue avec cet identifiant existe déjà.
+            description: Conflit d'identifiant.
             schema:
               $ref: '#/definitions/Error'
         """
@@ -123,5 +123,71 @@ def createLanguageBlueprint(languageService: LanguageService) -> Blueprint:
             _toLanguageDTO(request.get_json(silent=True))
         )
         return jsonify(language.toDict()), 201
- 
+
+    @blueprint.put("/<int:idLanguage>")
+    def updateLanguage(idLanguage: int):
+        """
+        Remplacer une langue existante.
+        ---
+        tags:
+          - Languages
+        consumes:
+          - application/json
+        parameters:
+          - name: idLanguage
+            in: path
+            type: integer
+            required: true
+            description: Identifiant de la langue à modifier.
+          - in: body
+            name: language
+            required: true
+            schema:
+              $ref: '#/definitions/LanguageInput'
+        responses:
+          200:
+            description: Langue modifiée.
+            schema:
+              $ref: '#/definitions/Language'
+          400:
+            description: Corps invalide ou identifiant URL/corps différent.
+            schema:
+              $ref: '#/definitions/Error'
+          404:
+            description: Langue introuvable.
+            schema:
+              $ref: '#/definitions/Error'
+        """
+        data = request.get_json(silent=True)
+        if isinstance(data, dict) and "idLanguage" in data and data["idLanguage"] != idLanguage:
+            raise InvalidRequestError("idLanguage in the URL and in the body must match")
+        language = _toLanguageDTO(data)
+        language.idLanguage = idLanguage
+        updatedLanguage = languageService.updateLanguage(language)
+        return jsonify(updatedLanguage.toDict()), 200
+
+    @blueprint.delete("/<int:idLanguage>")
+    def deleteLanguage(idLanguage: int):
+        """
+        Supprimer une langue.
+        ---
+        tags:
+          - Languages
+        parameters:
+          - name: idLanguage
+            in: path
+            type: integer
+            required: true
+            description: Identifiant de la langue à supprimer.
+        responses:
+          204:
+            description: Langue supprimée.
+          404:
+            description: Langue introuvable.
+            schema:
+              $ref: '#/definitions/Error'
+        """
+        languageService.deleteLanguage(idLanguage)
+        return "", 204
+
     return blueprint

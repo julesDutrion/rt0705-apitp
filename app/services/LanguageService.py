@@ -27,7 +27,17 @@ class LanguageService:
         return language
 
     def createLanguage(self, language: LanguageDTO) -> LanguageDTO:
+        language.code = language.code.lower()
         try:
             return self._languageDAO.create(language)
         except DuplicateKeyError:
             raise AlreadyExistsError(f"Language {language.idLanguage} already exists")
+
+    def updateLanguage(self, language: LanguageDTO) -> LanguageDTO:
+        if not self._languageDAO.update(language):
+            raise NotFoundError(f"Language {language.idLanguage} not found")
+        return language
+
+    def deleteLanguage(self, idLanguage: int) -> None:
+        if not self._languageDAO.delete(idLanguage):
+            raise NotFoundError(f"Language {idLanguage} not found")

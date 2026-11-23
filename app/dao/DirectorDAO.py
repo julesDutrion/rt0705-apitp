@@ -47,6 +47,16 @@ class DirectorDAO:
         self._collection.insert_one(director.toDict())
         return director
 
+    def update(self, director: DirectorDTO) -> bool:
+        result = self._collection.replace_one(
+            {"idDirector": director.idDirector}, director.toDict()
+        )
+        return result.matched_count == 1
+
+    def delete(self, idDirector: int) -> bool:
+        result = self._collection.delete_one({"idDirector": idDirector})
+        return result.deleted_count == 1
+
     def _find(self, query: dict) -> List[DirectorDTO]:
         documents = self._collection.find(query, _NO_MONGO_ID).sort("idDirector", ASCENDING)
         return [DirectorDTO.fromDict(doc) for doc in documents]

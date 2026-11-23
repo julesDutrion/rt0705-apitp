@@ -10,6 +10,7 @@ from .config.database import database as DATABASE_NAME
 from .config.database import uri as MONGO_URI
 
 from .controllers import (
+    createActorBlueprint,
     createClassificationBlueprint,
     createDirectorBlueprint,
     createFilmBlueprint,
@@ -19,6 +20,7 @@ from .controllers import (
 
 '''Listes des daos'''
 from .dao import (
+    ActorDAO,
     ClassificationDAO,
     DirectorDAO,
     FilmDAO,
@@ -28,6 +30,7 @@ from .dao import (
 
 '''Listes des services'''
 from .services import (
+    ActorService,
     ClassificationService,
     DirectorService,
     FilmService,
@@ -245,6 +248,7 @@ def createApp() -> Flask:
 
     # DAOs
     directorDAO = DirectorDAO(database)
+    actorDAO = ActorDAO(database)
     genreDAO = GenreDAO(database)
     languageDAO = LanguageDAO(database)
     classificationDAO = ClassificationDAO(database)
@@ -252,6 +256,7 @@ def createApp() -> Flask:
 
     # Services
     directorService = DirectorService(directorDAO)
+    actorService = ActorService(actorDAO)
     genreService = GenreService(genreDAO)
     languageService = LanguageService(languageDAO)
     classificationService = ClassificationService(classificationDAO)
@@ -261,6 +266,7 @@ def createApp() -> Flask:
 
     # Controllers
     app.register_blueprint(createDirectorBlueprint(directorService))
+    app.register_blueprint(createActorBlueprint(actorService))
     app.register_blueprint(createGenreBlueprint(genreService))
     app.register_blueprint(createLanguageBlueprint(languageService))
     app.register_blueprint(createClassificationBlueprint(classificationService))

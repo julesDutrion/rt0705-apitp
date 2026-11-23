@@ -28,3 +28,12 @@ class DirectorService:
             return self._directorDAO.create(director)
         except DuplicateKeyError:
             raise AlreadyExistsError(f"Director {director.idDirector} already exists")
+
+    def updateDirector(self, director: DirectorDTO) -> DirectorDTO:
+        if not self._directorDAO.update(director):
+            raise NotFoundError(f"Director {director.idDirector} not found")
+        return director
+
+    def deleteDirector(self, idDirector: int) -> None:
+        if not self._directorDAO.delete(idDirector):
+            raise NotFoundError(f"Director {idDirector} not found")

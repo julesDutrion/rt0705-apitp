@@ -28,3 +28,12 @@ class GenreService:
             return self._genreDAO.create(genre)
         except DuplicateKeyError:
             raise AlreadyExistsError(f"Genre {genre.idGenre} already exists")
+
+    def updateGenre(self, genre: GenreDTO) -> GenreDTO:
+        if not self._genreDAO.update(genre):
+            raise NotFoundError(f"Genre {genre.idGenre} not found")
+        return genre
+
+    def deleteGenre(self, idGenre: int) -> None:
+        if not self._genreDAO.delete(idGenre):
+            raise NotFoundError(f"Genre {idGenre} not found")

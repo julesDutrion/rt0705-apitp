@@ -1,7 +1,19 @@
+from typing import Any
+
 from flask import Blueprint, jsonify, request
 
+from ..Exceptions import InvalidRequestError
 from ..models import DirectorDTO
 from ..services import DirectorService
+
+
+def _toDirectorDTO(data: Any) -> DirectorDTO:
+    if not isinstance(data, dict):
+        raise InvalidRequestError("Invalid JSON body")
+    try:
+        return DirectorDTO.fromDictWithoutId(data)
+    except (KeyError, TypeError, ValueError) as error:
+        raise InvalidRequestError(f"Invalid or missing field: {error}")
 
 
 def createDirectorBlueprint(directorService: DirectorService) -> Blueprint:
@@ -19,7 +31,7 @@ def createDirectorBlueprint(directorService: DirectorService) -> Blueprint:
             in: query
             type: string
             required: false
-            description: Texte utilisé pour rechercher un réalisateur par son nom.
+            description: Recherche partielle sur le nom ou le prénom.
             example: Nolan
         responses:
           200:
@@ -88,18 +100,79 @@ def createDirectorBlueprint(directorService: DirectorService) -> Blueprint:
             schema:
               $ref: '#/definitions/Error'
           409:
-            description: Un réalisateur avec cet identifiant existe déjà.
+            description: Conflit d'identifiant.
+            schema:
+              $ref: '#/definitions/Error'
+        """
+        director = directorService.createDirector(
+            _toDirectorDTO(request.get_json(silent=True))
+        )
+        return jsonify(director.toDict()), 201
+
+    @blueprint.put("/<int:idDirector>")
+    def updateDirector(idDirector: int):
+        """
+        Remplacer un réalisateur existant.
+        ---
+        tags:
+          - Directors
+        consumes:
+          - application/json
+        parameters:
+          - name: idDirector
+            in: path
+            type: integer
+            required: true
+            description: Identifiant du réalisateur à modifier.
+          - in: body
+            name: director
+            required: true
+            schema:
+              $ref: '#/definitions/DirectorInput'
+        responses:
+          200:
+            description: Réalisateur modifié.
+            schema:
+              $ref: '#/definitions/Director'
+          400:
+            description: Corps invalide ou identifiant URL/corps différent.
+            schema:
+              $ref: '#/definitions/Error'
+          404:
+            description: Réalisateur introuvable.
             schema:
               $ref: '#/definitions/Error'
         """
         data = request.get_json(silent=True)
-        if data is None:
-            return jsonify({"error": "Invalid JSON body"}), 400
-        try:
-            director = DirectorDTO.fromDictWithoutId(data)
-        except (KeyError, TypeError) as e:
-            return jsonify({"error": f"Invalid or missing field: {e}"}), 400
-        directorService.createDirector(director)
-        return jsonify(director.toDict()), 201
+        if isinstance(data, dict) and "idDirector" in data and data["idDirector"] != idDirector:
+            raise InvalidRequestError("idDirector in the URL and in the body must match")
+        director = _toDirectorDTO(data)
+        director.idDirector = idDirector
+        updatedDirector = directorService.updateDirector(director)
+        return jsonify(updatedDirector.toDict()), 200
+
+    @blueprint.delete("/<int:idDirector>")
+    def deleteDirector(idDirector: int):
+        """
+        Supprimer un réalisateur.
+        ---
+        tags:
+          - Directors
+        parameters:
+          - name: idDirector
+            in: path
+            type: integer
+            required: true
+            description: Identifiant du réalisateur à supprimer.
+        responses:
+          204:
+            description: Réalisateur supprimé.
+          404:
+            description: Réalisateur introuvable.
+            schema:
+              $ref: '#/definitions/Error'
+        """
+        directorService.deleteDirector(idDirector)
+        return "", 204
 
     return blueprint

@@ -44,6 +44,16 @@ class GenreDAO:
         self._collection.insert_one(genre.toDict())
         return genre
 
+    def update(self, genre: GenreDTO) -> bool:
+        result = self._collection.replace_one(
+            {"idGenre": genre.idGenre}, genre.toDict()
+        )
+        return result.matched_count == 1
+
+    def delete(self, idGenre: int) -> bool:
+        result = self._collection.delete_one({"idGenre": idGenre})
+        return result.deleted_count == 1
+
     def _find(self, query: dict) -> List[GenreDTO]:
         documents = self._collection.find(query, _NO_MONGO_ID).sort("idGenre", ASCENDING)
         return [GenreDTO.fromDict(doc) for doc in documents]
