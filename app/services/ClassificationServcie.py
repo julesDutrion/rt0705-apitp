@@ -30,3 +30,16 @@ class ClassificationService:
             raise AlreadyExistsError(
                 f"Classification {classification.idClassification} already exists"
             )
+
+    def updateClassification(
+        self, classification: ClassificationDTO
+    ) -> ClassificationDTO:
+        if not self._classificationDAO.update(classification):
+            raise NotFoundError(
+                f"Classification {classification.idClassification} not found"
+            )
+        return classification
+
+    def deleteClassification(self, idClassification: int) -> None:
+        if not self._classificationDAO.delete(idClassification):
+            raise NotFoundError(f"Classification {idClassification} not found")

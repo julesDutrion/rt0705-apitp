@@ -45,6 +45,19 @@ class ClassificationDAO:
         self._collection.insert_one(classification.toDict())
         return classification
 
+    def update(self, classification: ClassificationDTO) -> bool:
+        result = self._collection.replace_one(
+            {"idClassification": classification.idClassification},
+            classification.toDict(),
+        )
+        return result.matched_count == 1
+
+    def delete(self, idClassification: int) -> bool:
+        result = self._collection.delete_one(
+            {"idClassification": idClassification}
+        )
+        return result.deleted_count == 1
+
     def _find(self, query: dict) -> List[ClassificationDTO]:
         documents = self._collection.find(query, _NO_MONGO_ID).sort(
             "idClassification", ASCENDING
