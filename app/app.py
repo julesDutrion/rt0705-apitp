@@ -16,6 +16,8 @@ from .controllers import (
     createFilmBlueprint,
     createGenreBlueprint,
     createLanguageBlueprint,
+    createSupportBlueprint,
+    createSupportTypeBlueprint,
 )
 
 '''Listes des daos'''
@@ -26,6 +28,8 @@ from .dao import (
     FilmDAO,
     GenreDAO,
     LanguageDAO,
+    SupportDAO,
+    SupportTypeDAO,
 )
 
 '''Listes des services'''
@@ -36,6 +40,8 @@ from .services import (
     FilmService,
     GenreService,
     LanguageService,
+    SupportService,
+    SupportTypeService,
 )
 
 from .ErrorHandlers import registerErrorHandlers
@@ -142,23 +148,69 @@ def createApp() -> Flask:
                 },
                 "Support": {
                     "type": "object",
-                    "required": ["idSupport", "storageLocation", "filePath", "fileSize", "fileFormat"],
+                    "description": "Un exemplaire physique ou un accès numérique associé à un film.",
+                    "required": ["idSupport", "idFilm", "idSupportType"],
                     "properties": {
                         "idSupport": {"type": "integer", "example": 1},
-                        "storageLocation": {"type": "string", "example": "local"},
-                        "filePath": {"type": "string", "example": "/films/interstellar.mp4"},
-                        "fileSize": {"type": "integer", "example": 1500000000},
-                        "fileFormat": {"type": "string", "example": "mp4"},
+                        "idFilm": {"type": "string", "example": "film-001"},
+                        "idSupportType": {"type": "integer", "example": 1},
+                        "location": {
+                            "type": "string",
+                            "example": "Étagère A2",
+                            "description": "Présente pour un type physical.",
+                        },
+                        "url": {
+                            "type": "string",
+                            "example": "https://example.com/video.mp4",
+                            "description": "URL HTTP(S), présente pour un type digital.",
+                        },
+                        "supportType": {"$ref": "#/definitions/SupportType"},
                     },
                 },
                 "SupportInput": {
                     "type": "object",
-                    "required": ["storageLocation", "filePath", "fileSize", "fileFormat"],
+                    "description": "Fournir location pour physical ou url pour digital, selon le mode du type référencé.",
+                    "required": ["idFilm", "idSupportType"],
                     "properties": {
-                        "storageLocation": {"type": "string", "example": "local"},
-                        "filePath": {"type": "string", "example": "/films/interstellar.mp4"},
-                        "fileSize": {"type": "integer", "example": 1500000000},
-                        "fileFormat": {"type": "string", "example": "mp4"},
+                        "idFilm": {"type": "string", "example": "film-001"},
+                        "idSupportType": {"type": "integer", "example": 1},
+                        "location": {
+                            "type": "string",
+                            "example": "Étagère A2",
+                            "description": "Obligatoire pour physical; interdit pour digital.",
+                        },
+                        "url": {
+                            "type": "string",
+                            "example": "https://example.com/video.mp4",
+                            "description": "URL HTTP(S), obligatoire pour digital; interdite pour physical.",
+                        },
+                    },
+                },
+                "SupportType": {
+                    "type": "object",
+                    "description": "Type de support disponible pour les films.",
+                    "required": ["idSupportType", "name", "mode"],
+                    "properties": {
+                        "idSupportType": {"type": "integer", "example": 1},
+                        "name": {"type": "string", "example": "Blu-ray"},
+                        "mode": {
+                            "type": "string",
+                            "enum": ["physical", "digital"],
+                            "description": "Détermine si chaque support requiert location ou url.",
+                        },
+                    },
+                },
+                "SupportTypeInput": {
+                    "type": "object",
+                    "description": "Créer ou remplacer un type de support.",
+                    "required": ["name", "mode"],
+                    "properties": {
+                        "name": {"type": "string", "example": "Blu-ray"},
+                        "mode": {
+                            "type": "string",
+                            "enum": ["physical", "digital"],
+                            "description": "physical pour un support localisé; digital pour un accès URL.",
+                        },
                     },
                 },
                 "DirectorReference": {
@@ -173,13 +225,6 @@ def createApp() -> Flask:
                     "required": ["idClassification"],
                     "properties": {
                         "idClassification": {"type": "integer", "example": 1},
-                    },
-                },
-                "SupportReference": {
-                    "type": "object",
-                    "required": ["idSupport"],
-                    "properties": {
-                        "idSupport": {"type": "integer", "example": 1},
                     },
                 },
                 "LanguageReference": {
@@ -216,7 +261,11 @@ def createApp() -> Flask:
                         "addedDate": {"type": "string", "format": "date", "example": "2026-11-20"},
                         "director": {"$ref": "#/definitions/Director"},
                         "classification": {"$ref": "#/definitions/Classification"},
-                        "support": {"$ref": "#/definitions/Support"},
+                        "supports": {
+                            "type": "array",
+                            "items": {"$ref": "#/definitions/Support"},
+                            "description": "Supports associés au film, chargés depuis la collection supports.",
+                        },
                         "nativeLanguage": {"$ref": "#/definitions/Language"},
                         "languages": {"type": "array", "items": {"$ref": "#/definitions/Language"}},
                         "genre": {"type": "array", "items": {"$ref": "#/definitions/Genre"}},
@@ -235,7 +284,6 @@ def createApp() -> Flask:
                         "addedDate": {"type": "string", "format": "date", "example": "2026-11-20"},
                         "director": {"$ref": "#/definitions/DirectorReference"},
                         "classification": {"$ref": "#/definitions/ClassificationReference"},
-                        "support": {"$ref": "#/definitions/SupportReference"},
                         "nativeLanguage": {"$ref": "#/definitions/LanguageReference"},
                         "languages": {"type": "array", "items": {"$ref": "#/definitions/LanguageReference"}},
                         "genre": {"type": "array", "items": {"$ref": "#/definitions/GenreReference"}},
@@ -253,6 +301,8 @@ def createApp() -> Flask:
     languageDAO = LanguageDAO(database)
     classificationDAO = ClassificationDAO(database)
     filmDAO = FilmDAO(database)
+    supportDAO = SupportDAO(database)
+    supportTypeDAO = SupportTypeDAO(database)
 
     # Services
     directorService = DirectorService(directorDAO)
@@ -260,8 +310,10 @@ def createApp() -> Flask:
     genreService = GenreService(genreDAO)
     languageService = LanguageService(languageDAO)
     classificationService = ClassificationService(classificationDAO)
+    supportService = SupportService(supportDAO, filmDAO, supportTypeDAO)
+    supportTypeService = SupportTypeService(supportTypeDAO, supportDAO)
     filmService = FilmService(
-        filmDAO, directorDAO, genreDAO, languageDAO, classificationDAO
+        filmDAO, directorDAO, genreDAO, languageDAO, classificationDAO, supportDAO
     )
 
     # Controllers
@@ -271,6 +323,8 @@ def createApp() -> Flask:
     app.register_blueprint(createLanguageBlueprint(languageService))
     app.register_blueprint(createClassificationBlueprint(classificationService))
     app.register_blueprint(createFilmBlueprint(filmService))
+    app.register_blueprint(createSupportBlueprint(supportService))
+    app.register_blueprint(createSupportTypeBlueprint(supportTypeService))
 
     registerErrorHandlers(app)
     return app

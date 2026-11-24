@@ -1,40 +1,32 @@
-"""DTOs du package Model (vidéothèque).
+"""DTO des exemplaires physiques et des accès numériques aux films."""
 
-Les noms d'attributs suivent le diagramme de classes (camelCase) afin que
-les clés JSON de l'API correspondent exactement au modèle.
-"""
+from dataclasses import dataclass
+from typing import Any, Dict, Optional
 
-from __future__ import annotations
-
-from dataclasses import dataclass, field, fields, is_dataclass
-from datetime import date
-from typing import Any, Dict, List, Optional
 from .BaseDTO import BaseDTO
+from .SupportTypeDTO import SupportTypeDTO
+
 
 @dataclass
 class SupportDTO(BaseDTO):
-    storageLocation: str
-    filePath: str
-    fileSize: int
-    fileFormat: str
+    idFilm: str
+    idSupportType: int
+    location: Optional[str] = None
+    url: Optional[str] = None
     idSupport: Optional[int] = None
+    supportType: Optional[SupportTypeDTO] = None
     ID_FIELDS = frozenset({"idSupport"})
 
     @classmethod
     def fromDict(cls, data: Dict[str, Any]) -> "SupportDTO":
         return cls(
             idSupport=data.get("idSupport"),
-            storageLocation=data["storageLocation"],
-            filePath=data["filePath"],
-            fileSize=data["fileSize"],
-            fileFormat=data["fileFormat"],
+            idFilm=data["idFilm"],
+            idSupportType=data["idSupportType"],
+            location=data.get("location"),
+            url=data.get("url"),
         )
 
     @classmethod
     def fromDictWithoutId(cls, data: Dict[str, Any]) -> "SupportDTO":
-        return cls(
-            storageLocation=data["storageLocation"],
-            filePath=data["filePath"],
-            fileSize=data["fileSize"],
-            fileFormat=data["fileFormat"],
-        )
+        return cls.fromDict({**data, "idSupport": None})

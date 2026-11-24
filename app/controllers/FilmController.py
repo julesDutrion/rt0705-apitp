@@ -23,7 +23,8 @@ def _findFilms(filmService: FilmService, args: MultiDict) -> List[FilmDTO]:
         "genre": args.get("genre", type=int),
         "director": args.get("director", type=int),
         "actor": args.get("actor", type=int),
-        "language": args.get("language", type=int)
+        "language": args.get("language", type=int),
+        "supportType": args.get("supportType", type=int),
     }
 
     return filmService.searchFilms(filters)
@@ -65,6 +66,11 @@ def createFilmBlueprint(filmService: FilmService) -> Blueprint:
             type: integer
             required: false
             description: Identifiant de la langue.
+          - name: supportType
+            in: query
+            type: integer
+            required: false
+            description: Identifiant du type de support (idSupportType).
         responses:
           200:
             description: Liste des films correspondant aux critères.
@@ -202,6 +208,10 @@ def createFilmBlueprint(filmService: FilmService) -> Blueprint:
             description: Film supprimé. Aucun contenu n'est renvoyé.
           404:
             description: Film introuvable.
+            schema:
+              $ref: '#/definitions/Error'
+          409:
+            description: Le film possède encore des supports associés.
             schema:
               $ref: '#/definitions/Error'
         """

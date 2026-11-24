@@ -5,6 +5,7 @@ from werkzeug.exceptions import HTTPException
 
 from .Exceptions import (
     AlreadyExistsError,
+    ConflictError,
     InvalidReferenceError,
     InvalidRequestError,
     NotFoundError,
@@ -23,6 +24,10 @@ def registerErrorHandlers(app: Flask) -> None:
 
     @app.errorhandler(AlreadyExistsError)
     def handleAlreadyExists(error: AlreadyExistsError):
+        return jsonify({"error": str(error)}), 409
+
+    @app.errorhandler(ConflictError)
+    def handleConflict(error: ConflictError):
         return jsonify({"error": str(error)}), 409
 
     @app.errorhandler(InvalidReferenceError)

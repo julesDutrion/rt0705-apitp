@@ -4,6 +4,8 @@ from .DirectorDAO import DirectorDAO
 from .FilmsDAO import FilmDAO
 from .GenreDAO import GenreDAO
 from .LanguageDAO import LanguageDAO
+from .SupportDAO import SupportDAO
+from .SupportTypeDAO import SupportTypeDAO
 
 __all__ = [
     "ActorDAO",
@@ -12,4 +14,6 @@ __all__ = [
     "FilmDAO",
     "GenreDAO",
     "LanguageDAO",
+    "SupportDAO",
+    "SupportTypeDAO",
 ]

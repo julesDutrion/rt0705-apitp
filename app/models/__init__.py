@@ -7,6 +7,7 @@ from .GenreDTO import GenreDTO
 from .LanguageDTO import LanguageDTO
 from .RoleDTO import RoleDTO
 from .SupportDTO import SupportDTO
+from .SupportTypeDTO import SupportTypeDTO
 from .UserDTO import UserDTO
 
 __all__ = [
@@ -19,5 +20,6 @@ __all__ = [
     "LanguageDTO",
     "RoleDTO",
     "SupportDTO",
+    "SupportTypeDTO",
     "UserDTO",
 ]

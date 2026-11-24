@@ -9,8 +9,14 @@ from ..dao import (
     FilmDAO,
     GenreDAO,
     LanguageDAO,
+    SupportDAO,
 )
-from ..Exceptions import AlreadyExistsError, InvalidReferenceError, NotFoundError
+from ..Exceptions import (
+    AlreadyExistsError,
+    ConflictError,
+    InvalidReferenceError,
+    NotFoundError,
+)
 from ..models import FilmDTO
 
 
@@ -22,12 +28,14 @@ class FilmService:
         genreDAO: GenreDAO,
         languageDAO: LanguageDAO,
         classificationDAO: ClassificationDAO,
+        supportDAO: SupportDAO,
     ) -> None:
         self._filmDAO = filmDAO
         self._directorDAO = directorDAO
         self._genreDAO = genreDAO
         self._languageDAO = languageDAO
         self._classificationDAO = classificationDAO
+        self._supportDAO = supportDAO
 
     # ------------------------------------------------------------------ #
     # Lecture
@@ -47,11 +55,24 @@ class FilmService:
             None = aucune restriction.
             [] = aucune classification autorisée.
             [1, 2] = classifications autorisées.
+
+        supportType :
+            Identifiant du type de support; seuls les films ayant un support
+            associé à ce type sont retournés.
         """
-        return self._filmDAO.searchFilms(
+        supportFilmIds = None
+        supportTypeId = filters.get("supportType")
+        if supportTypeId is not None:
+            supportFilmIds = self._supportDAO.getFilmIdsBySupportType(
+                supportTypeId
+            )
+
+        films = self._filmDAO.searchFilms(
             filters,
-            allowedClassificationIds
+            allowedClassificationIds,
+            supportFilmIds,
         )
+        return self._attachSupports(films)
 
     def getFilmById(
         self,
@@ -73,7 +94,7 @@ class FilmService:
         ):
             raise NotFoundError(f"Film {idFilm} not found")
 
-        return film
+        return self._attachSupports([film])[0]
 
     # ------------------------------------------------------------------ #
     # Écriture
@@ -82,7 +103,8 @@ class FilmService:
         self._checkReferences(film)
 
         try:
-            return self._filmDAO.createFilm(film)
+            createdFilm = self._filmDAO.createFilm(film)
+            return self._attachSupports([createdFilm])[0]
         except DuplicateKeyError:
             raise AlreadyExistsError(f"Film {film.idFilm} already exists")
 
@@ -92,11 +114,24 @@ class FilmService:
         if not self._filmDAO.updateFilm(film):
             raise NotFoundError(f"Film {film.idFilm} not found")
 
-        return film
+        return self._attachSupports([film])[0]
 
     def deleteFilm(self, idFilm: str) -> None:
+        if not self._filmDAO.existsFilm(idFilm):
+            raise NotFoundError(f"Film {idFilm} not found")
+        if self._supportDAO.existsForFilm(idFilm):
+            raise ConflictError(f"Film {idFilm} still has associated supports")
         if not self._filmDAO.deleteFilm(idFilm):
             raise NotFoundError(f"Film {idFilm} not found")
+
+    def _attachSupports(self, films: List[FilmDTO]) -> List[FilmDTO]:
+        supportsByFilm = self._supportDAO.getByFilmIds(
+            film.idFilm for film in films if film.idFilm is not None
+        )
+        for film in films:
+            if film.idFilm is not None:
+                film.supports = supportsByFilm.get(film.idFilm, [])
+        return films
 
     # ------------------------------------------------------------------ #
     # Interne : vérifie que les entités liées existent

@@ -25,7 +25,6 @@ from ..models import (
     FilmDTO,
     GenreDTO,
     LanguageDTO,
-    SupportDTO,
 )
 
 # On n'expose jamais l'_id interne de MongoDB : l'identifiant métier est idFilm.
@@ -37,17 +36,17 @@ class FilmDAO:
 
     Document stocké :
         idFilm, title, synopsis, releaseDate, duration, posterUrl, addedDate,
-        idDirector, idClassification, idSupport, idNativeLanguage,
+        idDirector, idClassification, idNativeLanguage,
         idLanguages[], idGenres[], idActors[]
 
     Les entités liées doivent déjà exister dans leurs collections
-    (directors, classifications, supports, languages, genres, actors).
+    (directors, classifications, languages, genres, actors). Les supports
+    référencent les films depuis leur propre collection.
     """
 
     FILMS = "films"
     DIRECTORS = "directors"
     CLASSIFICATIONS = "classifications"
-    SUPPORTS = "supports"
     LANGUAGES = "languages"
     GENRES = "genres"
     ACTORS = "actors"
@@ -73,7 +72,8 @@ class FilmDAO:
     def searchFilms(
         self,
         filters: Dict[str, Any],
-        allowedClassificationIds: Optional[List[int]] = None
+        allowedClassificationIds: Optional[List[int]] = None,
+        supportFilmIds: Optional[List[str]] = None,
     ) -> List[FilmDTO]:
         """
         Recherche des films avec plusieurs filtres cumulables.
@@ -114,6 +114,9 @@ class FilmDAO:
             query["idClassification"] = {
                 "$in": allowedClassificationIds
             }
+
+        if supportFilmIds is not None:
+            query["idFilm"] = {"$in": supportFilmIds}
 
         return self._findFilms(query)
 
@@ -165,7 +168,6 @@ class FilmDAO:
             "idClassification": (
                 film.classification.idClassification if film.classification else None
             ),
-            "idSupport": film.support.idSupport if film.support else None,
             "idNativeLanguage": (
                 film.nativeLanguage.idLanguage if film.nativeLanguage else None
             ),
@@ -193,10 +195,6 @@ class FilmDAO:
             self.CLASSIFICATIONS, "idClassification", ClassificationDTO,
             (d.get("idClassification") for d in documents),
         )
-        supports = self._loadByIds(
-            self.SUPPORTS, "idSupport", SupportDTO,
-            (d.get("idSupport") for d in documents),
-        )
         languages = self._loadByIds(
             self.LANGUAGES, "idLanguage", LanguageDTO,
             self._flatten(
@@ -223,7 +221,6 @@ class FilmDAO:
                     addedDate=self._toDate(doc["addedDate"]),
                     director=directors.get(doc.get("idDirector")),
                     classification=classifications.get(doc.get("idClassification")),
-                    support=supports.get(doc.get("idSupport")),
                     nativeLanguage=languages.get(doc.get("idNativeLanguage")),
                     languages=[
                         languages[i] for i in doc.get("idLanguages", []) if i in languages

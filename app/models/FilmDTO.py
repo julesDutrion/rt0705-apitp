@@ -32,7 +32,7 @@ class FilmDTO(BaseDTO):
     # Associations du diagramme
     director: Optional[DirectorDTO] = None            # 1
     classification: Optional[ClassificationDTO] = None  # 1
-    support: Optional[SupportDTO] = None              # 1
+    supports: List[SupportDTO] = field(default_factory=list)
     nativeLanguage: Optional[LanguageDTO] = None       # 1
     languages: List[LanguageDTO] = field(default_factory=list)  # *
     genre: List[GenreDTO] = field(default_factory=list)        # *
@@ -76,7 +76,6 @@ class FilmDTO(BaseDTO):
             addedDate=_date(data["addedDate"]),
             director=_one("director", DirectorDTO, "idDirector"),
             classification=_one("classification", ClassificationDTO, "idClassification"),
-            support=_one("support", SupportDTO, "idSupport"),
             nativeLanguage=_one("nativeLanguage", LanguageDTO, "idLanguage"),
             languages=[
                 _many(LanguageDTO, "idLanguage", x)

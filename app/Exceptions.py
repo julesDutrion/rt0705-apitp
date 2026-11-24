@@ -6,6 +6,10 @@ class AlreadyExistsError(Exception):
     """Une entité avec le même identifiant existe déjà."""
 
 
+class ConflictError(Exception):
+    """Une opération compromettrait la cohérence des références."""
+
+
 class InvalidReferenceError(Exception):
     """Une entité référencée (réalisateur, genre, langue...) n'existe pas."""
 
