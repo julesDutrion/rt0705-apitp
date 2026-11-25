@@ -1,19 +1,6 @@
-from typing import Any
-
 from flask import Blueprint, jsonify, request
 
-from ..Exceptions import InvalidRequestError
-from ..models import GenreDTO
 from ..services import GenreService
-
-
-def _toGenreDTO(data: Any) -> GenreDTO:
-    if not isinstance(data, dict):
-        raise InvalidRequestError("Invalid JSON body")
-    try:
-        return GenreDTO.fromDictWithoutId(data)
-    except (KeyError, TypeError, ValueError) as error:
-        raise InvalidRequestError(f"Invalid or missing field: {error}")
 
 
 def createGenreBlueprint(genreService: GenreService) -> Blueprint:
@@ -104,7 +91,7 @@ def createGenreBlueprint(genreService: GenreService) -> Blueprint:
             schema:
               $ref: '#/definitions/Error'
         """
-        genre = genreService.createGenre(_toGenreDTO(request.get_json(silent=True)))
+        genre = genreService.createGenre(request.get_json(silent=True))
         return jsonify(genre.toDict()), 201
 
     @blueprint.put("/<int:idGenre>")
@@ -141,12 +128,9 @@ def createGenreBlueprint(genreService: GenreService) -> Blueprint:
             schema:
               $ref: '#/definitions/Error'
         """
-        data = request.get_json(silent=True)
-        if isinstance(data, dict) and "idGenre" in data and data["idGenre"] != idGenre:
-            raise InvalidRequestError("idGenre in the URL and in the body must match")
-        genre = _toGenreDTO(data)
-        genre.idGenre = idGenre
-        updatedGenre = genreService.updateGenre(genre)
+        updatedGenre = genreService.updateGenre(
+            idGenre, request.get_json(silent=True)
+        )
         return jsonify(updatedGenre.toDict()), 200
 
     @blueprint.delete("/<int:idGenre>")

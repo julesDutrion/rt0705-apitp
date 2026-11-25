@@ -15,9 +15,11 @@ from ..Exceptions import (
     AlreadyExistsError,
     ConflictError,
     InvalidReferenceError,
+    InvalidRequestError,
     NotFoundError,
 )
 from ..models import FilmDTO
+from ._input import dtoFromInput
 
 
 class FilmService:
@@ -99,7 +101,8 @@ class FilmService:
     # ------------------------------------------------------------------ #
     # Écriture
     # ------------------------------------------------------------------ #
-    def createFilm(self, film: FilmDTO) -> FilmDTO:
+    def createFilm(self, data: Any) -> FilmDTO:
+        film = dtoFromInput(data, FilmDTO.fromDictWithoutId)
         self._checkReferences(film)
 
         try:
@@ -108,7 +111,17 @@ class FilmService:
         except DuplicateKeyError:
             raise AlreadyExistsError(f"Film {film.idFilm} already exists")
 
-    def updateFilm(self, film: FilmDTO) -> FilmDTO:
+    def updateFilm(self, idFilm: str, data: Any) -> FilmDTO:
+        if (
+            isinstance(data, dict)
+            and "idFilm" in data
+            and data["idFilm"] != idFilm
+        ):
+            raise InvalidRequestError(
+                "idFilm in the URL and in the body must match"
+            )
+        film = dtoFromInput(data, FilmDTO.fromDictWithoutId)
+        film.idFilm = idFilm
         self._checkReferences(film)
 
         if not self._filmDAO.updateFilm(film):

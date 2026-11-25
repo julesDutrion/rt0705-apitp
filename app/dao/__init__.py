@@ -6,6 +6,7 @@ from .GenreDAO import GenreDAO
 from .LanguageDAO import LanguageDAO
 from .SupportDAO import SupportDAO
 from .SupportTypeDAO import SupportTypeDAO
+from .UserDAO import UserDAO
 
 __all__ = [
     "ActorDAO",
@@ -16,4 +17,5 @@ __all__ = [
     "LanguageDAO",
     "SupportDAO",
     "SupportTypeDAO",
+    "UserDAO",
 ]

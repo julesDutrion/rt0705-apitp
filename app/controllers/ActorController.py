@@ -1,19 +1,6 @@
-from typing import Any
-
 from flask import Blueprint, jsonify, request
 
-from ..Exceptions import InvalidRequestError
-from ..models import ActorDTO
 from ..services import ActorService
-
-
-def _toActorDTO(data: Any) -> ActorDTO:
-    if not isinstance(data, dict):
-        raise InvalidRequestError("Invalid JSON body")
-    try:
-        return ActorDTO.fromDictWithoutId(data)
-    except (KeyError, TypeError, ValueError) as error:
-        raise InvalidRequestError(f"Invalid or missing field: {error}")
 
 
 def createActorBlueprint(actorService: ActorService) -> Blueprint:
@@ -104,7 +91,7 @@ def createActorBlueprint(actorService: ActorService) -> Blueprint:
             schema:
               $ref: '#/definitions/Error'
         """
-        actor = actorService.createActor(_toActorDTO(request.get_json(silent=True)))
+        actor = actorService.createActor(request.get_json(silent=True))
         return jsonify(actor.toDict()), 201
 
     @blueprint.put("/<int:idActor>")
@@ -141,12 +128,9 @@ def createActorBlueprint(actorService: ActorService) -> Blueprint:
             schema:
               $ref: '#/definitions/Error'
         """
-        data = request.get_json(silent=True)
-        if isinstance(data, dict) and "idActor" in data and data["idActor"] != idActor:
-            raise InvalidRequestError("idActor in the URL and in the body must match")
-        actor = _toActorDTO(data)
-        actor.idActor = idActor
-        updatedActor = actorService.updateActor(actor)
+        updatedActor = actorService.updateActor(
+            idActor, request.get_json(silent=True)
+        )
         return jsonify(updatedActor.toDict()), 200
 
     @blueprint.delete("/<int:idActor>")

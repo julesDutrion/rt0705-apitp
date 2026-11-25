@@ -1,10 +1,11 @@
-from typing import List
+from typing import Any, List
 
 from pymongo.errors import DuplicateKeyError
 
 from ..dao import ClassificationDAO
-from ..Exceptions import AlreadyExistsError, NotFoundError
+from ..Exceptions import AlreadyExistsError, InvalidRequestError, NotFoundError
 from ..models import ClassificationDTO
+from ._input import dtoFromInput
 
 
 class ClassificationService:
@@ -23,7 +24,8 @@ class ClassificationService:
             raise NotFoundError(f"Classification {idClassification} not found")
         return classification
 
-    def createClassification(self, classification: ClassificationDTO) -> ClassificationDTO:
+    def createClassification(self, data: Any) -> ClassificationDTO:
+        classification = dtoFromInput(data, ClassificationDTO.fromDictWithoutId)
         try:
             return self._classificationDAO.create(classification)
         except DuplicateKeyError:
@@ -32,8 +34,18 @@ class ClassificationService:
             )
 
     def updateClassification(
-        self, classification: ClassificationDTO
+        self, idClassification: int, data: Any
     ) -> ClassificationDTO:
+        if (
+            isinstance(data, dict)
+            and "idClassification" in data
+            and data["idClassification"] != idClassification
+        ):
+            raise InvalidRequestError(
+                "idClassification in the URL and in the body must match"
+            )
+        classification = dtoFromInput(data, ClassificationDTO.fromDictWithoutId)
+        classification.idClassification = idClassification
         if not self._classificationDAO.update(classification):
             raise NotFoundError(
                 f"Classification {classification.idClassification} not found"

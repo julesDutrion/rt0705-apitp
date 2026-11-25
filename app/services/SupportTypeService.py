@@ -1,4 +1,4 @@
-from typing import List
+from typing import Any, List
 
 from pymongo.errors import DuplicateKeyError
 
@@ -10,6 +10,7 @@ from ..Exceptions import (
     NotFoundError,
 )
 from ..models import SupportTypeDTO
+from ._input import dtoFromInput
 
 
 class SupportTypeService:
@@ -30,7 +31,8 @@ class SupportTypeService:
             raise NotFoundError(f"Support type {idSupportType} not found")
         return supportType
 
-    def createSupportType(self, supportType: SupportTypeDTO) -> SupportTypeDTO:
+    def createSupportType(self, data: Any) -> SupportTypeDTO:
+        supportType = dtoFromInput(data, SupportTypeDTO.fromDictWithoutId)
         self._validate(supportType)
         try:
             return self._supportTypeDAO.create(supportType)
@@ -39,7 +41,17 @@ class SupportTypeService:
                 f"Support type {supportType.idSupportType} already exists"
             )
 
-    def updateSupportType(self, supportType: SupportTypeDTO) -> SupportTypeDTO:
+    def updateSupportType(self, idSupportType: int, data: Any) -> SupportTypeDTO:
+        if (
+            isinstance(data, dict)
+            and "idSupportType" in data
+            and data["idSupportType"] != idSupportType
+        ):
+            raise InvalidRequestError(
+                "idSupportType in the URL and in the body must match"
+            )
+        supportType = dtoFromInput(data, SupportTypeDTO.fromDictWithoutId)
+        supportType.idSupportType = idSupportType
         self._validate(supportType)
         current = self.getSupportTypeById(supportType.idSupportType)
         if current.mode != supportType.mode and self._supportDAO.existsForType(

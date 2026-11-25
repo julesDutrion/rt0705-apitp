@@ -1,19 +1,6 @@
-from typing import Any
-
 from flask import Blueprint, jsonify, request
 
-from ..Exceptions import InvalidRequestError
-from ..models import LanguageDTO
 from ..services import LanguageService
-
-
-def _toLanguageDTO(data: Any) -> LanguageDTO:
-    if not isinstance(data, dict):
-        raise InvalidRequestError("Invalid JSON body")
-    try:
-        return LanguageDTO.fromDictWithoutId(data)
-    except (KeyError, TypeError, ValueError) as error:
-        raise InvalidRequestError(f"Invalid or missing field: {error}")
 
 
 def createLanguageBlueprint(languageService: LanguageService) -> Blueprint:
@@ -131,9 +118,7 @@ def createLanguageBlueprint(languageService: LanguageService) -> Blueprint:
             schema:
               $ref: '#/definitions/Error'
         """
-        language = languageService.createLanguage(
-            _toLanguageDTO(request.get_json(silent=True))
-        )
+        language = languageService.createLanguage(request.get_json(silent=True))
         return jsonify(language.toDict()), 201
 
     @blueprint.put("/<int:idLanguage>")
@@ -170,12 +155,9 @@ def createLanguageBlueprint(languageService: LanguageService) -> Blueprint:
             schema:
               $ref: '#/definitions/Error'
         """
-        data = request.get_json(silent=True)
-        if isinstance(data, dict) and "idLanguage" in data and data["idLanguage"] != idLanguage:
-            raise InvalidRequestError("idLanguage in the URL and in the body must match")
-        language = _toLanguageDTO(data)
-        language.idLanguage = idLanguage
-        updatedLanguage = languageService.updateLanguage(language)
+        updatedLanguage = languageService.updateLanguage(
+            idLanguage, request.get_json(silent=True)
+        )
         return jsonify(updatedLanguage.toDict()), 200
 
     @blueprint.delete("/<int:idLanguage>")

@@ -5,7 +5,7 @@ from .DirectorDTO import DirectorDTO
 from .FilmDTO import FilmDTO
 from .GenreDTO import GenreDTO
 from .LanguageDTO import LanguageDTO
-from .RoleDTO import RoleDTO
+from .RoleEnum import UserRole
 from .SupportDTO import SupportDTO
 from .SupportTypeDTO import SupportTypeDTO
 from .UserDTO import UserDTO
@@ -18,7 +18,7 @@ __all__ = [
     "FilmDTO",
     "GenreDTO",
     "LanguageDTO",
-    "RoleDTO",
+    "UserRole",
     "SupportDTO",
     "SupportTypeDTO",
     "UserDTO",

@@ -16,3 +16,9 @@ class InvalidReferenceError(Exception):
 
 class InvalidRequestError(Exception):
     """Le corps de la requête est absent, malformé ou incomplet."""
+
+class UserInputError(Exception):
+    """Erreur liée aux informations saisies par l'utilisateur."""
+
+    def __init__(self, message: str):
+        super().__init__(message)

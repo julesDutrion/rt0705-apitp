@@ -1,4 +1,4 @@
-from typing import List
+from typing import Any, List
 from urllib.parse import urlparse
 
 from pymongo.errors import DuplicateKeyError
@@ -11,6 +11,7 @@ from ..Exceptions import (
     NotFoundError,
 )
 from ..models import SupportDTO, SupportTypeDTO
+from ._input import dtoFromInput
 
 
 class SupportService:
@@ -38,7 +39,8 @@ class SupportService:
             raise NotFoundError(f"Film {idFilm} not found")
         return self._supportDAO.getByFilmId(idFilm)
 
-    def createSupport(self, support: SupportDTO) -> SupportDTO:
+    def createSupport(self, data: Any) -> SupportDTO:
+        support = dtoFromInput(data, SupportDTO.fromDictWithoutId)
         support.supportType = self._checkReferences(support)
         try:
             return self._supportDAO.create(support)
@@ -47,7 +49,17 @@ class SupportService:
                 f"Support {support.idSupport} already exists"
             )
 
-    def updateSupport(self, support: SupportDTO) -> SupportDTO:
+    def updateSupport(self, idSupport: int, data: Any) -> SupportDTO:
+        if (
+            isinstance(data, dict)
+            and "idSupport" in data
+            and data["idSupport"] != idSupport
+        ):
+            raise InvalidRequestError(
+                "idSupport in the URL and in the body must match"
+            )
+        support = dtoFromInput(data, SupportDTO.fromDictWithoutId)
+        support.idSupport = idSupport
         support.supportType = self._checkReferences(support)
         if not self._supportDAO.update(support):
             raise NotFoundError(f"Support {support.idSupport} not found")

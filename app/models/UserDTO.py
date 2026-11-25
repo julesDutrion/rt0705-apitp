@@ -1,57 +1,59 @@
-"""DTOs du package Model (vidéothèque).
-
-Les noms d'attributs suivent le diagramme de classes (camelCase) afin que
-les clés JSON de l'API correspondent exactement au modèle.
-"""
-
-from __future__ import annotations
-
-from dataclasses import dataclass, field, fields, is_dataclass
+from dataclasses import dataclass
 from datetime import date
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 from .BaseDTO import BaseDTO
-from .RoleDTO import RoleDTO
-
+from .RoleEnum import UserRole
 
 
 @dataclass
 class UserDTO(BaseDTO):
-    role: RoleDTO
-    userName: str
+    role: UserRole
+    login: str
     email: str
     passwordHash: str
-    age: int
+    birthDate: date
+    idUser: Optional[int] = None
+
+    ID_FIELDS = frozenset({"idUser"})
 
     @classmethod
     def fromDict(cls, data: Dict[str, Any]) -> "UserDTO":
         return cls(
-            role=RoleDTO.fromDict(data["role"]),
-            userName=data["userName"],
+            idUser=data.get("idUser"),
+            role=UserRole(data["role"]),
+            login=data["login"],
             email=data["email"],
             passwordHash=data["passwordHash"],
-            age=data["age"],
+            birthDate=date.fromisoformat(data["birthDate"]),
         )
 
     @classmethod
     def fromDictWithoutId(cls, data: Dict[str, Any]) -> "UserDTO":
-        role = data["role"]
-        if isinstance(role, dict) and "idRole" in role and len(role) == 1:
-            roleDTO = RoleDTO(idRole=role["idRole"], roleName="")
-        elif isinstance(role, dict) and "roleName" in role:
-            roleDTO = RoleDTO.fromDict(role)
-        else:
-            roleDTO = RoleDTO.fromDictWithoutId(role)
         return cls(
-            role=roleDTO,
-            userName=data["userName"],
+            role=UserRole(data["role"]),
+            login=data["login"],
             email=data["email"],
             passwordHash=data["passwordHash"],
-            age=data["age"],
+            birthDate=date.fromisoformat(data["birthDate"]),
         )
+
+    def calculateAge(self) -> int:
+        today = date.today()
+        age = today.year - self.birthDate.year
+
+        if (today.month, today.day) < (
+            self.birthDate.month,
+            self.birthDate.day
+        ):
+            age -= 1
+
+        return age
 
     def toPublicDict(self) -> Dict[str, Any]:
         """Version à renvoyer au client : sans le hash du mot de passe."""
         data = self.toDict()
         data.pop("passwordHash", None)
+        data["birthDate"] = self.birthDate.isoformat()
+        data["age"] = self.calculateAge()
         return data

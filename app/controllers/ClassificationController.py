@@ -1,6 +1,5 @@
 from flask import Blueprint, jsonify, request
 
-from ..models import ClassificationDTO
 from ..services import ClassificationService
 
 
@@ -94,14 +93,9 @@ def createClassificationBlueprint(
             schema:
               $ref: '#/definitions/Error'
         """
-        data = request.get_json(silent=True)
-        if data is None:
-            return jsonify({"error": "Invalid JSON body"}), 400
-        try:
-            classification = ClassificationDTO.fromDictWithoutId(data)
-        except (KeyError, TypeError) as e:
-            return jsonify({"error": f"Invalid or missing field: {e}"}), 400
-        classificationService.createClassification(classification)
+        classification = classificationService.createClassification(
+            request.get_json(silent=True)
+        )
         return jsonify(classification.toDict()), 201
 
     @blueprint.put("/<int:idClassification>")
@@ -138,23 +132,8 @@ def createClassificationBlueprint(
             schema:
               $ref: '#/definitions/Error'
         """
-        data = request.get_json(silent=True)
-        if data is None or not isinstance(data, dict):
-            return jsonify({"error": "Invalid JSON body"}), 400
-        if (
-            "idClassification" in data
-            and data["idClassification"] != idClassification
-        ):
-            return jsonify({
-                "error": "idClassification in the URL and in the body must match"
-            }), 400
-        try:
-            classification = ClassificationDTO.fromDictWithoutId(data)
-        except (KeyError, TypeError) as error:
-            return jsonify({"error": f"Invalid or missing field: {error}"}), 400
-        classification.idClassification = idClassification
         updatedClassification = classificationService.updateClassification(
-            classification
+            idClassification, request.get_json(silent=True)
         )
         return jsonify(updatedClassification.toDict()), 200
 

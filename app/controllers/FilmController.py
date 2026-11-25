@@ -1,20 +1,10 @@
-from typing import Any, List
+from typing import List
 
 from flask import Blueprint, jsonify, request
 from werkzeug.datastructures import MultiDict
 
-from ..Exceptions import InvalidRequestError
 from ..models import FilmDTO
 from ..services import FilmService
-
-
-def _toFilmDTO(data: Any) -> FilmDTO:
-    if not isinstance(data, dict):
-        raise InvalidRequestError("Invalid JSON body")
-    try:
-        return FilmDTO.fromDictWithoutId(data)
-    except (KeyError, TypeError, ValueError) as e:
-        raise InvalidRequestError(f"Invalid or missing field: {e}")
 
 
 def _findFilms(filmService: FilmService, args: MultiDict) -> List[FilmDTO]:
@@ -141,7 +131,7 @@ def createFilmBlueprint(filmService: FilmService) -> Blueprint:
             schema:
               $ref: '#/definitions/Error'
         """
-        film = filmService.createFilm(_toFilmDTO(request.get_json(silent=True)))
+        film = filmService.createFilm(request.get_json(silent=True))
         return jsonify(film.toDict()), 201
 
     @blueprint.put("/<string:idFilm>")
@@ -182,12 +172,9 @@ def createFilmBlueprint(filmService: FilmService) -> Blueprint:
             schema:
               $ref: '#/definitions/Error'
         """
-        data = request.get_json(silent=True)
-        if isinstance(data, dict) and "idFilm" in data and data["idFilm"] != idFilm:
-            raise InvalidRequestError("idFilm in the URL and in the body must match")
-        film = _toFilmDTO(data)
-        film.idFilm = idFilm
-        updatedFilm = filmService.updateFilm(film)
+        updatedFilm = filmService.updateFilm(
+            idFilm, request.get_json(silent=True)
+        )
         return jsonify(updatedFilm.toDict()), 200
 
     @blueprint.delete("/<string:idFilm>")

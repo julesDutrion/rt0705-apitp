@@ -1,19 +1,6 @@
-from typing import Any
-
 from flask import Blueprint, jsonify, request
 
-from ..Exceptions import InvalidRequestError
-from ..models import SupportTypeDTO
 from ..services import SupportTypeService
-
-
-def _toSupportTypeDTO(data: Any) -> SupportTypeDTO:
-    if not isinstance(data, dict):
-        raise InvalidRequestError("Invalid JSON body")
-    try:
-        return SupportTypeDTO.fromDictWithoutId(data)
-    except (KeyError, TypeError, ValueError) as error:
-        raise InvalidRequestError(f"Invalid or missing field: {error}")
 
 
 def createSupportTypeBlueprint(
@@ -96,7 +83,7 @@ def createSupportTypeBlueprint(
               $ref: '#/definitions/Error'
         """
         supportType = supportTypeService.createSupportType(
-            _toSupportTypeDTO(request.get_json(silent=True))
+            request.get_json(silent=True)
         )
         return jsonify(supportType.toDict()), 201
 
@@ -137,18 +124,9 @@ def createSupportTypeBlueprint(
             schema:
               $ref: '#/definitions/Error'
         """
-        data = request.get_json(silent=True)
-        if (
-            isinstance(data, dict)
-            and "idSupportType" in data
-            and data["idSupportType"] != idSupportType
-        ):
-            raise InvalidRequestError(
-                "idSupportType in the URL and in the body must match"
-            )
-        supportType = _toSupportTypeDTO(data)
-        supportType.idSupportType = idSupportType
-        updated = supportTypeService.updateSupportType(supportType)
+        updated = supportTypeService.updateSupportType(
+            idSupportType, request.get_json(silent=True)
+        )
         return jsonify(updated.toDict()), 200
 
     @blueprint.delete("/<int:idSupportType>")

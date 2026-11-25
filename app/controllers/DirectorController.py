@@ -1,19 +1,6 @@
-from typing import Any
-
 from flask import Blueprint, jsonify, request
 
-from ..Exceptions import InvalidRequestError
-from ..models import DirectorDTO
 from ..services import DirectorService
-
-
-def _toDirectorDTO(data: Any) -> DirectorDTO:
-    if not isinstance(data, dict):
-        raise InvalidRequestError("Invalid JSON body")
-    try:
-        return DirectorDTO.fromDictWithoutId(data)
-    except (KeyError, TypeError, ValueError) as error:
-        raise InvalidRequestError(f"Invalid or missing field: {error}")
 
 
 def createDirectorBlueprint(directorService: DirectorService) -> Blueprint:
@@ -104,9 +91,7 @@ def createDirectorBlueprint(directorService: DirectorService) -> Blueprint:
             schema:
               $ref: '#/definitions/Error'
         """
-        director = directorService.createDirector(
-            _toDirectorDTO(request.get_json(silent=True))
-        )
+        director = directorService.createDirector(request.get_json(silent=True))
         return jsonify(director.toDict()), 201
 
     @blueprint.put("/<int:idDirector>")
@@ -143,12 +128,9 @@ def createDirectorBlueprint(directorService: DirectorService) -> Blueprint:
             schema:
               $ref: '#/definitions/Error'
         """
-        data = request.get_json(silent=True)
-        if isinstance(data, dict) and "idDirector" in data and data["idDirector"] != idDirector:
-            raise InvalidRequestError("idDirector in the URL and in the body must match")
-        director = _toDirectorDTO(data)
-        director.idDirector = idDirector
-        updatedDirector = directorService.updateDirector(director)
+        updatedDirector = directorService.updateDirector(
+            idDirector, request.get_json(silent=True)
+        )
         return jsonify(updatedDirector.toDict()), 200
 
     @blueprint.delete("/<int:idDirector>")

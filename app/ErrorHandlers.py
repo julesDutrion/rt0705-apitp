@@ -9,6 +9,7 @@ from .Exceptions import (
     InvalidReferenceError,
     InvalidRequestError,
     NotFoundError,
+    UserInputError
 )
 
 
@@ -16,6 +17,10 @@ def registerErrorHandlers(app: Flask) -> None:
     # --- Exceptions métier ------------------------------------------------
     @app.errorhandler(InvalidRequestError)
     def handleInvalidRequest(error: InvalidRequestError):
+        return jsonify({"error": str(error)}), 400
+
+    @app.errorhandler(UserInputError)
+    def handleUserInputError(error: UserInputError):
         return jsonify({"error": str(error)}), 400
 
     @app.errorhandler(NotFoundError)
