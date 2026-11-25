@@ -22,10 +22,17 @@ def createLanguageBlueprint(languageService: LanguageService) -> Blueprint:
     @blueprint.get("")
     def getLanguages():
         """
-        Récupérer toutes les langues disponibles.
+        Récupérer toutes les langues disponibles ou rechercher par nom.
         ---
         tags:
           - Languages
+        parameters:
+          - name: name
+            in: query
+            type: string
+            required: false
+            description: Nom ou partie du nom de la langue recherchée.
+            example: French
         responses:
           200:
             description: Liste des langues.
@@ -34,7 +41,12 @@ def createLanguageBlueprint(languageService: LanguageService) -> Blueprint:
               items:
                 $ref: '#/definitions/Language'
         """
-        languages = languageService.getAllLanguages()
+        name = request.args.get("name")
+        languages = (
+            languageService.searchLanguagesByName(name)
+            if name
+            else languageService.getAllLanguages()
+        )
         return jsonify([language.toDict() for language in languages]), 200
 
     @blueprint.get("/<int:idLanguage>")

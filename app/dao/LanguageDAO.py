@@ -1,3 +1,4 @@
+import re
 from typing import List, Optional
 
 from pymongo import ASCENDING, DESCENDING
@@ -28,8 +29,18 @@ class LanguageDAO:
 
     def getByCode(self, code: str) -> Optional[LanguageDTO]:
         """Ex. 'fr', 'en'."""
-        document = self._collection.find_one({"code": code.lower()}, _NO_MONGO_ID)
+        document = self._collection.find_one(
+            {"code": {"$regex": f"^{re.escape(code)}$", "$options": "i"}},
+            _NO_MONGO_ID,
+        )
         return LanguageDTO.fromDict(document) if document else None
+
+    def searchByName(self, name: str) -> List[LanguageDTO]:
+        pattern = {"$regex": re.escape(name), "$options": "i"}
+        documents = self._collection.find({"name": pattern}, _NO_MONGO_ID).sort(
+            "idLanguage", ASCENDING
+        )
+        return [LanguageDTO.fromDict(document) for document in documents]
 
     def create(self, language: LanguageDTO) -> LanguageDTO:
         """Génère un identifiant entier absent de la collection."""

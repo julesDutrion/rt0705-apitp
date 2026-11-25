@@ -14,6 +14,9 @@ class LanguageService:
     def getAllLanguages(self) -> List[LanguageDTO]:
         return self._languageDAO.getAll()
 
+    def searchLanguagesByName(self, name: str) -> List[LanguageDTO]:
+        return self._languageDAO.searchByName(name)
+
     def getLanguageById(self, idLanguage: int) -> LanguageDTO:
         language = self._languageDAO.getById(idLanguage)
         if language is None:
