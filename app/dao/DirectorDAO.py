@@ -1,0 +1,62 @@
+import re
+from typing import List, Optional
+
+from pymongo import ASCENDING, DESCENDING
+from pymongo.database import Database
+
+from ..models import DirectorDTO
+
+_NO_MONGO_ID = {"_id": 0}
+
+'''
+    Classe représentant un DAO pour les réalisateurs
+'''
+class DirectorDAO:
+    COLLECTION_NAME = "directors"
+
+    def __init__(self, database: Database) -> None:
+        self._collection = database[self.COLLECTION_NAME]
+        self._collection.create_index([("idDirector", ASCENDING)], unique=True)
+
+    def getAll(self) -> List[DirectorDTO]:
+        return self._find({})
+
+    def getById(self, idDirector: int) -> Optional[DirectorDTO]:
+        document = self._collection.find_one({"idDirector": idDirector}, _NO_MONGO_ID)
+        return DirectorDTO.fromDict(document) if document else None
+
+    def exists(self, idDirector: int) -> bool:
+        return self._collection.count_documents({"idDirector": idDirector}, limit=1) > 0
+
+    def searchByName(self, name: str) -> List[DirectorDTO]:
+        """Recherche partielle (insensible à la casse) sur le nom ou le prénom."""
+        pattern = {"$regex": re.escape(name), "$options": "i"}
+        return self._find({"$or": [{"lastName": pattern}, {"firstName": pattern}]})
+
+    def create(self, director: DirectorDTO) -> DirectorDTO:
+        """Génère un identifiant entier absent de la collection."""
+        if director.idDirector is None:
+            document = self._collection.find_one(
+                {}, {"idDirector": 1, "_id": 0},
+                sort=[("idDirector", DESCENDING)],
+            )
+            nextId = (document["idDirector"] + 1) if document else 1
+            while self.exists(nextId):
+                nextId += 1
+            director.idDirector = nextId
+        self._collection.insert_one(director.toDict())
+        return director
+
+    def update(self, director: DirectorDTO) -> bool:
+        result = self._collection.replace_one(
+            {"idDirector": director.idDirector}, director.toDict()
+        )
+        return result.matched_count == 1
+
+    def delete(self, idDirector: int) -> bool:
+        result = self._collection.delete_one({"idDirector": idDirector})
+        return result.deleted_count == 1
+
+    def _find(self, query: dict) -> List[DirectorDTO]:
+        documents = self._collection.find(query, _NO_MONGO_ID).sort("idDirector", ASCENDING)
+        return [DirectorDTO.fromDict(doc) for doc in documents]
