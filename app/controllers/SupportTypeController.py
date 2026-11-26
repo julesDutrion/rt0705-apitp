@@ -1,7 +1,8 @@
 from flask import Blueprint, jsonify, request
 
 from ..services import SupportTypeService
-
+from ..decorators import requireRole
+from ..models import UserRole
 
 def createSupportTypeBlueprint(
     supportTypeService: SupportTypeService,
@@ -17,6 +18,7 @@ def createSupportTypeBlueprint(
         ---
         tags:
           - Types de supports
+        security: []
         responses:
           200:
             description: Liste des types de supports.
@@ -35,6 +37,7 @@ def createSupportTypeBlueprint(
         ---
         tags:
           - Types de supports
+        security: []
         parameters:
           - name: idSupportType
             in: path
@@ -54,6 +57,7 @@ def createSupportTypeBlueprint(
         return jsonify(supportType.toDict()), 200
 
     @blueprint.post("")
+    @requireRole(UserRole.ADMIN,UserRole.MANAGER)
     def createSupportType():
         """
         Créer un type de support.
@@ -88,6 +92,7 @@ def createSupportTypeBlueprint(
         return jsonify(supportType.toDict()), 201
 
     @blueprint.put("/<int:idSupportType>")
+    @requireRole(UserRole.ADMIN,UserRole.MANAGER)
     def updateSupportType(idSupportType: int):
         """
         Modifier un type de support.
@@ -130,6 +135,7 @@ def createSupportTypeBlueprint(
         return jsonify(updated.toDict()), 200
 
     @blueprint.delete("/<int:idSupportType>")
+    @requireRole(UserRole.ADMIN,UserRole.MANAGER)
     def deleteSupportType(idSupportType: int):
         """
         Supprimer un type de support non utilisé.

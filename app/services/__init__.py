@@ -1,4 +1,5 @@
 from .ActorService import ActorService
+from .AuthService import AuthService
 from .ClassificationServcie import ClassificationService
 from .DirectorService import DirectorService
 from .FilmService import FilmService
@@ -10,6 +11,7 @@ from .UserService import UserService
 
 __all__ = [
     "ActorService",
+    "AuthService",
     "ClassificationService",
     "DirectorService",
     "FilmService",

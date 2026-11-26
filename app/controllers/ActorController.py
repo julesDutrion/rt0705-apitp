@@ -1,6 +1,8 @@
 from flask import Blueprint, jsonify, request
 
 from ..services import ActorService
+from ..decorators import requireRole
+from ..models import UserRole
 
 
 def createActorBlueprint(actorService: ActorService) -> Blueprint:
@@ -13,6 +15,7 @@ def createActorBlueprint(actorService: ActorService) -> Blueprint:
         ---
         tags:
           - Actors
+        security: []
         parameters:
           - name: name
             in: query
@@ -43,6 +46,7 @@ def createActorBlueprint(actorService: ActorService) -> Blueprint:
         ---
         tags:
           - Actors
+        security: []
         parameters:
           - name: idActor
             in: path
@@ -63,6 +67,7 @@ def createActorBlueprint(actorService: ActorService) -> Blueprint:
         return jsonify(actor.toDict()), 200
 
     @blueprint.post("")
+    @requireRole(UserRole.ADMIN,UserRole.MANAGER)
     def createActor():
         """
         Créer un acteur.
@@ -95,6 +100,7 @@ def createActorBlueprint(actorService: ActorService) -> Blueprint:
         return jsonify(actor.toDict()), 201
 
     @blueprint.put("/<int:idActor>")
+    @requireRole(UserRole.ADMIN,UserRole.MANAGER)
     def updateActor(idActor: int):
         """
         Remplacer un acteur existant.
@@ -134,6 +140,7 @@ def createActorBlueprint(actorService: ActorService) -> Blueprint:
         return jsonify(updatedActor.toDict()), 200
 
     @blueprint.delete("/<int:idActor>")
+    @requireRole(UserRole.ADMIN,UserRole.MANAGER)
     def deleteActor(idActor: int):
         """
         Supprimer un acteur.

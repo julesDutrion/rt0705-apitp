@@ -11,6 +11,7 @@ from .config.database import uri as MONGO_URI
 
 from .controllers import (
     createActorBlueprint,
+    createAuthBlueprint,
     createClassificationBlueprint,
     createDirectorBlueprint,
     createFilmBlueprint,
@@ -45,6 +46,7 @@ from .services import (
     SupportService,
     SupportTypeService,
     UserService,
+    AuthService
 )
 
 from .ErrorHandlers import registerErrorHandlers
@@ -61,6 +63,15 @@ def createApp() -> Flask:
                 "description": "Documentation des endpoints de l'API de gestion de vidéothèque.",
                 "version": "1.0.0",
             },
+            "securityDefinitions": {
+                "Bearer": {
+                    "type": "apiKey",
+                    "name": "Authorization",
+                    "in": "header",
+                    "description": "Saisir « Bearer <JWT> ».",
+                },
+            },
+            "security": [{"Bearer": []}],
             "definitions": {
                 "Error": {
                     "type": "object",
@@ -75,8 +86,8 @@ def createApp() -> Flask:
                         "idUser": {"type": "integer", "example": 1},
                         "role": {
                             "type": "string",
-                            "enum": ["user", "manager", "admin"],
-                            "example": "user",
+                            "enum": ["consulteur", "manager", "adminstrateur"],
+                            "example": "consulteur",
                         },
                         "login": {"type": "string", "example": "jules"},
                         "email": {"type": "string", "format": "email", "example": "jules@example.com"},
@@ -86,6 +97,7 @@ def createApp() -> Flask:
                 },
                 "UserInput": {
                     "type": "object",
+                    "additionalProperties": False,
                     "required": ["login", "email", "password", "birthDate"],
                     "properties": {
                         "login": {"type": "string", "example": "jules"},
@@ -101,6 +113,8 @@ def createApp() -> Flask:
                 },
                 "UserUpdateInput": {
                     "type": "object",
+                    "description": "Champs personnels modifiables uniquement. idUser, s'il est fourni, doit correspondre à l'identifiant du chemin. Le champ role est interdit.",
+                    "additionalProperties": False,
                     "properties": {
                         "idUser": {"type": "integer", "example": 1},
                         "login": {"type": "string", "example": "jules"},
@@ -112,6 +126,41 @@ def createApp() -> Flask:
                             "description": "Optionnel; mêmes exigences que lors de la création.",
                         },
                         "birthDate": {"type": "string", "format": "date", "example": "2000-01-15"},
+                    },
+                },
+                "UserRoleInput": {
+                    "type": "object",
+                    "additionalProperties": False,
+                    "required": ["role"],
+                    "properties": {
+                        "role": {
+                            "type": "string",
+                            "enum": ["consulteur", "manager", "adminstrateur"],
+                            "example": "manager",
+                        },
+                    },
+                },
+                "LoginInput": {
+                    "type": "object",
+                    "additionalProperties": False,
+                    "required": ["login", "password"],
+                    "properties": {
+                        "login": {"type": "string", "example": "jules"},
+                        "password": {
+                            "type": "string",
+                            "format": "password",
+                            "example": "StrongPass1!",
+                        },
+                    },
+                },
+                "LoginResponse": {
+                    "type": "object",
+                    "required": ["accessToken", "tokenType", "expiresIn", "user"],
+                    "properties": {
+                        "accessToken": {"type": "string", "example": "eyJ..."},
+                        "tokenType": {"type": "string", "enum": ["Bearer"]},
+                        "expiresIn": {"type": "integer", "example": 3600},
+                        "user": {"$ref": "#/definitions/User"},
                     },
                 },
                 "Classification": {
@@ -355,6 +404,8 @@ def createApp() -> Flask:
     userDAO = UserDAO(database)
 
     # Services
+    authService = AuthService(userDAO)
+    app.extensions["authService"] = authService
     directorService = DirectorService(directorDAO)
     actorService = ActorService(actorDAO)
     genreService = GenreService(genreDAO)
@@ -377,6 +428,7 @@ def createApp() -> Flask:
     app.register_blueprint(createSupportBlueprint(supportService))
     app.register_blueprint(createSupportTypeBlueprint(supportTypeService))
     app.register_blueprint(createUserBlueprint(userService))
+    app.register_blueprint(createAuthBlueprint(authService))
 
     registerErrorHandlers(app)
     return app

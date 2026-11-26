@@ -1,7 +1,8 @@
 from flask import Blueprint, jsonify, request
 
 from ..services import SupportService
-
+from ..decorators import requireRole
+from ..models import UserRole
 
 def createSupportBlueprint(supportService: SupportService) -> Blueprint:
     blueprint = Blueprint("supports", __name__, url_prefix="/supports")
@@ -13,6 +14,7 @@ def createSupportBlueprint(supportService: SupportService) -> Blueprint:
         ---
         tags:
           - Supports
+        security: []
         responses:
           200:
             description: Liste des supports.
@@ -31,6 +33,7 @@ def createSupportBlueprint(supportService: SupportService) -> Blueprint:
         ---
         tags:
           - Supports
+        security: []
         parameters:
           - name: idFilm
             in: path
@@ -58,6 +61,7 @@ def createSupportBlueprint(supportService: SupportService) -> Blueprint:
         ---
         tags:
           - Supports
+        security: []
         parameters:
           - name: idSupport
             in: path
@@ -77,6 +81,7 @@ def createSupportBlueprint(supportService: SupportService) -> Blueprint:
         return jsonify(support.toDict()), 200
 
     @blueprint.post("")
+    @requireRole(UserRole.ADMIN,UserRole.MANAGER)
     def createSupport():
         """
         Créer un support associé à un film et à un type.
@@ -114,6 +119,7 @@ def createSupportBlueprint(supportService: SupportService) -> Blueprint:
         return jsonify(support.toDict()), 201
 
     @blueprint.put("/<int:idSupport>")
+    @requireRole(UserRole.ADMIN,UserRole.MANAGER)
     def updateSupport(idSupport: int):
         """
         Modifier un support existant.
@@ -156,6 +162,7 @@ def createSupportBlueprint(supportService: SupportService) -> Blueprint:
         return jsonify(updated.toDict()), 200
 
     @blueprint.delete("/<int:idSupport>")
+    @requireRole(UserRole.ADMIN,UserRole.MANAGER)
     def deleteSupport(idSupport: int):
         """
         Supprimer un support.

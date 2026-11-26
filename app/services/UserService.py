@@ -57,6 +57,13 @@ class UserService:
     def updateUser(self, idUser: int, data: Any) -> UserDTO:
         if not isinstance(data, dict):
             raise InvalidRequestError("Invalid request body.")
+        if any(
+            field not in {"idUser", "login", "email", "password", "birthDate"}
+            for field in data
+        ):
+            raise InvalidRequestError(
+                "Only personal user information can be updated."
+            )
         if "idUser" in data and data["idUser"] != idUser:
             raise InvalidRequestError(
                 "idUser in the URL and in the body must match."
@@ -95,6 +102,18 @@ class UserService:
             raise AlreadyExistsError(
                 "Ce login ou cette adresse e-mail est déjà utilisé."
             )
+        return user
+
+    def updateUserRole(self, idUser: int, role: Any) -> UserDTO:
+        try:
+            updatedRole = role if isinstance(role, UserRole) else UserRole(role)
+        except (TypeError, ValueError):
+            raise UserInputError("Le rôle transmis est invalide.")
+
+        user = self.getUserById(idUser)
+        user.role = updatedRole
+        if not self._userDAO.update(user):
+            raise NotFoundError(f"User {idUser} not found")
         return user
 
     # --- Suppression ------------------------------------------------------
@@ -145,6 +164,13 @@ class UserService:
     def _createUserAndHashPassword(self, data: Any) -> UserDTO:
         if not isinstance(data, dict):
             raise InvalidRequestError("Invalid request body.")
+        if any(
+            field not in {"login", "email", "password", "birthDate"}
+            for field in data
+        ):
+            raise InvalidRequestError(
+                "Only login, email, password, and birthDate can be provided."
+            )
         login = data.get("login")
         email = data.get("email")
         password = data.get("password")

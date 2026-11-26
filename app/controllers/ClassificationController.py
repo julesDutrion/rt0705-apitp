@@ -1,7 +1,8 @@
 from flask import Blueprint, jsonify, request
 
 from ..services import ClassificationService
-
+from ..decorators import requireRole
+from ..models import UserRole
 
 def createClassificationBlueprint(
     classificationService: ClassificationService,
@@ -15,6 +16,7 @@ def createClassificationBlueprint(
         ---
         tags:
           - Classifications
+        security: []
         parameters:
           - name: minAge
             in: query
@@ -45,6 +47,7 @@ def createClassificationBlueprint(
         ---
         tags:
           - Classifications
+        security: []
         parameters:
           - name: idClassification
             in: path
@@ -65,6 +68,7 @@ def createClassificationBlueprint(
         return jsonify(classification.toDict()), 200
 
     @blueprint.post("")
+    @requireRole(UserRole.ADMIN,UserRole.MANAGER)
     def createClassification():
         """
         Créer une classification.
@@ -99,6 +103,7 @@ def createClassificationBlueprint(
         return jsonify(classification.toDict()), 201
 
     @blueprint.put("/<int:idClassification>")
+    @requireRole(UserRole.ADMIN,UserRole.MANAGER)
     def updateClassification(idClassification: int):
         """
         Remplacer une classification existante.
@@ -138,6 +143,7 @@ def createClassificationBlueprint(
         return jsonify(updatedClassification.toDict()), 200
 
     @blueprint.delete("/<int:idClassification>")
+    @requireRole(UserRole.ADMIN,UserRole.MANAGER)
     def deleteClassification(idClassification: int):
         """
         Supprimer une classification.

@@ -5,7 +5,8 @@ from werkzeug.datastructures import MultiDict
 
 from ..models import FilmDTO
 from ..services import FilmService
-
+from ..decorators import requireRole
+from ..models import UserRole
 
 def _findFilms(filmService: FilmService, args: MultiDict) -> List[FilmDTO]:
     filters = {
@@ -30,6 +31,7 @@ def createFilmBlueprint(filmService: FilmService) -> Blueprint:
         ---
         tags:
           - Films
+        security: []
         parameters:
           - name: title
             in: query
@@ -79,6 +81,7 @@ def createFilmBlueprint(filmService: FilmService) -> Blueprint:
         ---
         tags:
           - Films
+        security: []
         parameters:
           - name: idFilm
             in: path
@@ -99,6 +102,7 @@ def createFilmBlueprint(filmService: FilmService) -> Blueprint:
         return jsonify(film.toDict()), 200
 
     @blueprint.post("")
+    @requireRole(UserRole.ADMIN,UserRole.MANAGER)
     def createFilm():
         """
         Ajouter un film.
@@ -135,6 +139,7 @@ def createFilmBlueprint(filmService: FilmService) -> Blueprint:
         return jsonify(film.toDict()), 201
 
     @blueprint.put("/<string:idFilm>")
+    @requireRole(UserRole.ADMIN,UserRole.MANAGER)
     def updateFilm(idFilm: str):
         """
         Modifier un film existant.
@@ -178,7 +183,9 @@ def createFilmBlueprint(filmService: FilmService) -> Blueprint:
         return jsonify(updatedFilm.toDict()), 200
 
     @blueprint.delete("/<string:idFilm>")
+    @requireRole(UserRole.ADMIN,UserRole.MANAGER)
     def deleteFilm(idFilm: str):
+      
         """
         Supprimer un film.
         ---

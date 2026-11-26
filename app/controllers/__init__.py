@@ -1,3 +1,4 @@
+from .AuthController import createAuthBlueprint
 from .ClassificationController import createClassificationBlueprint
 from .ActorController import createActorBlueprint
 from .DirectorController import createDirectorBlueprint
@@ -10,6 +11,7 @@ from .UserController import createUserBlueprint
 
 __all__ = [
     "createActorBlueprint",
+    "createAuthBlueprint",
     "createClassificationBlueprint",
     "createDirectorBlueprint",
     "createFilmBlueprint",

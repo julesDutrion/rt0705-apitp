@@ -17,6 +17,11 @@ class InvalidReferenceError(Exception):
 class InvalidRequestError(Exception):
     """Le corps de la requête est absent, malformé ou incomplet."""
 
+
+class AuthenticationError(Exception):
+    """Les identifiants d'authentification sont incorrects."""
+
+
 class UserInputError(Exception):
     """Erreur liée aux informations saisies par l'utilisateur."""
 

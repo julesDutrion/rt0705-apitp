@@ -1,7 +1,8 @@
 from flask import Blueprint, jsonify, request
 
 from ..services import DirectorService
-
+from ..decorators import requireRole
+from ..models import UserRole
 
 def createDirectorBlueprint(directorService: DirectorService) -> Blueprint:
     blueprint = Blueprint("directors", __name__, url_prefix="/directors")
@@ -13,6 +14,7 @@ def createDirectorBlueprint(directorService: DirectorService) -> Blueprint:
         ---
         tags:
           - Directors
+        security: []
         parameters:
           - name: name
             in: query
@@ -43,6 +45,7 @@ def createDirectorBlueprint(directorService: DirectorService) -> Blueprint:
         ---
         tags:
           - Directors
+        security: []
         parameters:
           - name: idDirector
             in: path
@@ -63,6 +66,7 @@ def createDirectorBlueprint(directorService: DirectorService) -> Blueprint:
         return jsonify(director.toDict()), 200
 
     @blueprint.post("")
+    @requireRole(UserRole.ADMIN,UserRole.MANAGER)
     def createDirector():
         """
         Créer un réalisateur.
@@ -95,6 +99,7 @@ def createDirectorBlueprint(directorService: DirectorService) -> Blueprint:
         return jsonify(director.toDict()), 201
 
     @blueprint.put("/<int:idDirector>")
+    @requireRole(UserRole.ADMIN,UserRole.MANAGER)
     def updateDirector(idDirector: int):
         """
         Remplacer un réalisateur existant.
@@ -134,6 +139,7 @@ def createDirectorBlueprint(directorService: DirectorService) -> Blueprint:
         return jsonify(updatedDirector.toDict()), 200
 
     @blueprint.delete("/<int:idDirector>")
+    @requireRole(UserRole.ADMIN,UserRole.MANAGER)
     def deleteDirector(idDirector: int):
         """
         Supprimer un réalisateur.

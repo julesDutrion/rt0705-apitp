@@ -1,7 +1,8 @@
 from flask import Blueprint, jsonify, request
 
 from ..services import GenreService
-
+from ..decorators import requireRole
+from ..models import UserRole
 
 def createGenreBlueprint(genreService: GenreService) -> Blueprint:
     blueprint = Blueprint("genres", __name__, url_prefix="/genres")
@@ -13,6 +14,7 @@ def createGenreBlueprint(genreService: GenreService) -> Blueprint:
         ---
         tags:
           - Genres
+        security: []
         parameters:
           - name: name
             in: query
@@ -43,6 +45,7 @@ def createGenreBlueprint(genreService: GenreService) -> Blueprint:
         ---
         tags:
           - Genres
+        security: []
         parameters:
           - name: idGenre
             in: path
@@ -63,6 +66,7 @@ def createGenreBlueprint(genreService: GenreService) -> Blueprint:
         return jsonify(genre.toDict()), 200
 
     @blueprint.post("")
+    @requireRole(UserRole.ADMIN,UserRole.MANAGER)
     def createGenre():
         """
         Créer un genre.
@@ -95,6 +99,7 @@ def createGenreBlueprint(genreService: GenreService) -> Blueprint:
         return jsonify(genre.toDict()), 201
 
     @blueprint.put("/<int:idGenre>")
+    @requireRole(UserRole.ADMIN,UserRole.MANAGER)
     def updateGenre(idGenre: int):
         """
         Remplacer un genre existant.
@@ -134,6 +139,7 @@ def createGenreBlueprint(genreService: GenreService) -> Blueprint:
         return jsonify(updatedGenre.toDict()), 200
 
     @blueprint.delete("/<int:idGenre>")
+    @requireRole(UserRole.ADMIN,UserRole.MANAGER)
     def deleteGenre(idGenre: int):
         """
         Supprimer un genre.

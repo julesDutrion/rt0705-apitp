@@ -1,7 +1,8 @@
 from flask import Blueprint, jsonify, request
 
 from ..services import LanguageService
-
+from ..decorators import requireRole
+from ..models import UserRole
 
 def createLanguageBlueprint(languageService: LanguageService) -> Blueprint:
     blueprint = Blueprint("languages", __name__, url_prefix="/languages")
@@ -13,6 +14,7 @@ def createLanguageBlueprint(languageService: LanguageService) -> Blueprint:
         ---
         tags:
           - Languages
+        security: []
         parameters:
           - name: name
             in: query
@@ -43,6 +45,7 @@ def createLanguageBlueprint(languageService: LanguageService) -> Blueprint:
         ---
         tags:
           - Languages
+        security: []
         parameters:
           - name: idLanguage
             in: path
@@ -69,6 +72,7 @@ def createLanguageBlueprint(languageService: LanguageService) -> Blueprint:
         ---
         tags:
           - Languages
+        security: []
         parameters:
           - name: code
             in: path
@@ -90,6 +94,7 @@ def createLanguageBlueprint(languageService: LanguageService) -> Blueprint:
         return jsonify(language.toDict()), 200
 
     @blueprint.post("")
+    @requireRole(UserRole.ADMIN,UserRole.MANAGER)
     def createLanguage():
         """
         Créer une langue.
@@ -122,6 +127,7 @@ def createLanguageBlueprint(languageService: LanguageService) -> Blueprint:
         return jsonify(language.toDict()), 201
 
     @blueprint.put("/<int:idLanguage>")
+    @requireRole(UserRole.ADMIN,UserRole.MANAGER)
     def updateLanguage(idLanguage: int):
         """
         Remplacer une langue existante.
@@ -161,6 +167,7 @@ def createLanguageBlueprint(languageService: LanguageService) -> Blueprint:
         return jsonify(updatedLanguage.toDict()), 200
 
     @blueprint.delete("/<int:idLanguage>")
+    @requireRole(UserRole.ADMIN,UserRole.MANAGER)
     def deleteLanguage(idLanguage: int):
         """
         Supprimer une langue.
