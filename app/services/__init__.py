@@ -6,6 +6,7 @@ from .GenreService import GenreService
 from .LanguageService import LanguageService
 from .SupportService import SupportService
 from .SupportTypeService import SupportTypeService
+from .UserService import UserService
 
 __all__ = [
     "ActorService",
@@ -16,4 +17,5 @@ __all__ = [
     "LanguageService",
     "SupportService",
     "SupportTypeService",
+    "UserService",
 ]

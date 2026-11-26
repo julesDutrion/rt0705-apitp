@@ -38,6 +38,11 @@ class UserDTO(BaseDTO):
             birthDate=date.fromisoformat(data["birthDate"]),
         )
 
+    def toDict(self) -> Dict[str, Any]:
+        data = super().toDict()
+        data["role"] = self.role.value
+        return data
+
     def calculateAge(self) -> int:
         today = date.today()
         age = today.year - self.birthDate.year

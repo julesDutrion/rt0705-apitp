@@ -6,6 +6,7 @@ from .GenreController import createGenreBlueprint
 from .LanguageController import createLanguageBlueprint
 from .SupportController import createSupportBlueprint
 from .SupportTypeController import createSupportTypeBlueprint
+from .UserController import createUserBlueprint
 
 __all__ = [
     "createActorBlueprint",
@@ -16,4 +17,5 @@ __all__ = [
     "createLanguageBlueprint",
     "createSupportBlueprint",
     "createSupportTypeBlueprint",
+    "createUserBlueprint",
 ]

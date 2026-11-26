@@ -18,6 +18,7 @@ from .controllers import (
     createLanguageBlueprint,
     createSupportBlueprint,
     createSupportTypeBlueprint,
+    createUserBlueprint,
 )
 
 '''Listes des daos'''
@@ -30,6 +31,7 @@ from .dao import (
     LanguageDAO,
     SupportDAO,
     SupportTypeDAO,
+    UserDAO,
 )
 
 '''Listes des services'''
@@ -42,6 +44,7 @@ from .services import (
     LanguageService,
     SupportService,
     SupportTypeService,
+    UserService,
 )
 
 from .ErrorHandlers import registerErrorHandlers
@@ -63,6 +66,52 @@ def createApp() -> Flask:
                     "type": "object",
                     "properties": {
                         "error": {"type": "string", "example": "Resource not found"}
+                    },
+                },
+                "User": {
+                    "type": "object",
+                    "required": ["idUser", "role", "login", "email", "birthDate", "age"],
+                    "properties": {
+                        "idUser": {"type": "integer", "example": 1},
+                        "role": {
+                            "type": "string",
+                            "enum": ["user", "manager", "admin"],
+                            "example": "user",
+                        },
+                        "login": {"type": "string", "example": "jules"},
+                        "email": {"type": "string", "format": "email", "example": "jules@example.com"},
+                        "birthDate": {"type": "string", "format": "date", "example": "2000-01-15"},
+                        "age": {"type": "integer", "example": 26},
+                    },
+                },
+                "UserInput": {
+                    "type": "object",
+                    "required": ["login", "email", "password", "birthDate"],
+                    "properties": {
+                        "login": {"type": "string", "example": "jules"},
+                        "email": {"type": "string", "format": "email", "example": "jules@example.com"},
+                        "password": {
+                            "type": "string",
+                            "format": "password",
+                            "example": "StrongPass1!",
+                            "description": "Au moins 12 caractères avec une minuscule, une majuscule, un chiffre et un symbole.",
+                        },
+                        "birthDate": {"type": "string", "format": "date", "example": "2000-01-15"},
+                    },
+                },
+                "UserUpdateInput": {
+                    "type": "object",
+                    "properties": {
+                        "idUser": {"type": "integer", "example": 1},
+                        "login": {"type": "string", "example": "jules"},
+                        "email": {"type": "string", "format": "email", "example": "jules@example.com"},
+                        "password": {
+                            "type": "string",
+                            "format": "password",
+                            "example": "StrongPass1!",
+                            "description": "Optionnel; mêmes exigences que lors de la création.",
+                        },
+                        "birthDate": {"type": "string", "format": "date", "example": "2000-01-15"},
                     },
                 },
                 "Classification": {
@@ -303,6 +352,7 @@ def createApp() -> Flask:
     filmDAO = FilmDAO(database)
     supportDAO = SupportDAO(database)
     supportTypeDAO = SupportTypeDAO(database)
+    userDAO = UserDAO(database)
 
     # Services
     directorService = DirectorService(directorDAO)
@@ -312,6 +362,7 @@ def createApp() -> Flask:
     classificationService = ClassificationService(classificationDAO)
     supportService = SupportService(supportDAO, filmDAO, supportTypeDAO)
     supportTypeService = SupportTypeService(supportTypeDAO, supportDAO)
+    userService = UserService(userDAO)
     filmService = FilmService(
         filmDAO, directorDAO, genreDAO, languageDAO, classificationDAO, supportDAO
     )
@@ -325,6 +376,7 @@ def createApp() -> Flask:
     app.register_blueprint(createFilmBlueprint(filmService))
     app.register_blueprint(createSupportBlueprint(supportService))
     app.register_blueprint(createSupportTypeBlueprint(supportTypeService))
+    app.register_blueprint(createUserBlueprint(userService))
 
     registerErrorHandlers(app)
     return app
