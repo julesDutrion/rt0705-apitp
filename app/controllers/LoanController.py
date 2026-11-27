@@ -135,6 +135,43 @@ def createLoanBlueprint(loanService: LoanService) -> Blueprint:
         loans = loanService.getAllLoans()
         return jsonify(loanService.toPublicDicts(loans)), 200
 
+    @blueprint.get("/user/<string:login>")
+    @requireRole(UserRole.MANAGER, UserRole.ADMIN)
+    def getLoansByUserLogin(login: str):
+        """
+        Rechercher les emprunts d'un utilisateur par son login.
+        Réservé aux managers et aux administrateurs.
+        ---
+        tags:
+          - Loans
+        parameters:
+          - name: login
+            in: path
+            type: string
+            required: true
+        responses:
+          200:
+            description: Emprunts associés au login, avec le type de support.
+            schema:
+              type: array
+              items:
+                $ref: '#/definitions/Loan'
+          401:
+            description: Jeton manquant, invalide ou expiré.
+            schema:
+              $ref: '#/definitions/Error'
+          403:
+            description: Réservé aux managers et administrateurs.
+            schema:
+              $ref: '#/definitions/Error'
+          404:
+            description: Utilisateur introuvable.
+            schema:
+              $ref: '#/definitions/Error'
+        """
+        loans = loanService.getLoansForUserByLogin(login)
+        return jsonify(loanService.toPublicDicts(loans)), 200
+
     @blueprint.get("/<int:idLoan>")
     @requireRole(UserRole.MANAGER, UserRole.ADMIN)
     def getLoan(idLoan: int):

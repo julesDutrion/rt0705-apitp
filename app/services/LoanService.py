@@ -77,6 +77,14 @@ class LoanService:
     def getLoansForUser(self, idUser: int) -> List[LoanDTO]:
         return self._loanDAO.getByUserId(idUser)
 
+    def getLoansForUserByLogin(self, login: str) -> List[LoanDTO]:
+        if not isinstance(login, str) or not login.strip():
+            raise InvalidRequestError("login must be a non-empty string.")
+        user = self._userDAO.getByLogin(login.strip())
+        if user is None:
+            raise NotFoundError(f"User {login} not found")
+        return self._loanDAO.getByUserId(user.idUser)
+
     def getLoanForUser(self, idLoan: int, idUser: int) -> LoanDTO:
         loan = self._loanDAO.getByIdAndUserId(idLoan, idUser)
         if loan is None:
