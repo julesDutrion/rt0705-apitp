@@ -34,17 +34,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class FilmDAO:
-    """Accès aux données de la collection `films`.
-
-    Document stocké :
-        idFilm, title, synopsis, releaseDate, duration, posterUrl, addedDate,
-        idDirector, idClassification, idNativeLanguage,
-        idLanguages[], idGenres[], idActors[]
-
-    Les entités liées doivent déjà exister dans leurs collections
-    (directors, classifications, languages, genres, actors). Les supports
-    référencent les films depuis leur propre collection.
-    """
+    """Classe qui représente l'accès aux données des films."""
 
     FILMS = "films"
     DIRECTORS = "directors"
@@ -63,9 +53,20 @@ class FilmDAO:
     # Lecture
     # ------------------------------------------------------------------ #
     def getAllFilms(self) -> List[FilmDTO]:
+        """
+        Méthode qui récupère tous les films.
+
+        :return: Liste des DTO de films.
+        """
         return self._findFilms({})
 
     def getFilmById(self, idFilm: str) -> Optional[FilmDTO]:
+        """
+        Méthode qui récupère un film par son identifiant.
+
+        :param idFilm: Identifiant du film.
+        :return: DTO du film ou None s'il est absent.
+        """
         document = self._films.find_one({"idFilm": idFilm}, _NO_MONGO_ID)
         if document is None:
             return None
@@ -78,14 +79,12 @@ class FilmDAO:
         supportFilmIds: Optional[List[str]] = None,
     ) -> List[FilmDTO]:
         """
-        Recherche des films avec plusieurs filtres cumulables.
+        Méthode qui recherche les films selon plusieurs critères.
 
-        Les filtres sont combinés avec une logique ET.
-
-        allowedClassificationIds :
-            None = aucune restriction de classification.
-            []   = aucune classification autorisée.
-            [1, 2] = uniquement les classifications 1 et 2.
+        :param filters: Critères de recherche.
+        :param allowedClassificationIds: Classifications autorisées ou None.
+        :param supportFilmIds: Films associés au type recherché ou None.
+        :return: Liste des DTO de films correspondants.
         """
         query: Dict[str, Any] = {}
 
@@ -123,6 +122,12 @@ class FilmDAO:
         return self._findFilms(query)
 
     def existsFilm(self, idFilm: str) -> bool:
+        """
+        Méthode qui vérifie l'existence d'un film.
+
+        :param idFilm: Identifiant du film.
+        :return: True si le film existe, sinon False.
+        """
         return self._films.count_documents(
             {"idFilm": idFilm}, limit=1
         ) > 0
@@ -131,7 +136,13 @@ class FilmDAO:
     # Écriture
     # ------------------------------------------------------------------ #
     def createFilm(self, film: FilmDTO) -> FilmDTO:
-        """Génère un identifiant UUID absent de la collection."""
+        """
+        Méthode qui enregistre un film.
+
+        :param film: DTO du film à enregistrer.
+        :return: DTO du film enregistré.
+        :raises DuplicateKeyError: Si l'identifiant existe déjà.
+        """
         if film.idFilm is None:
             while True:
                 candidate = str(uuid.uuid4())
@@ -142,20 +153,27 @@ class FilmDAO:
         return film
 
     def updateFilm(self, film: FilmDTO) -> bool:
-        """Remplace le film ayant le même idFilm. Retourne False s'il n'existe pas."""
+        """
+        Méthode qui remplace les données d'un film.
+
+        :param film: DTO contenant les données modifiées.
+        :return: True si un film a été modifié, sinon False.
+        """
         result = self._films.replace_one(
             {"idFilm": film.idFilm}, self._toDocument(film)
         )
         return result.matched_count == 1
 
     def deleteFilm(self, idFilm: str) -> bool:
-        """Supprime un film. Retourne False s'il n'existe pas."""
+        """
+        Méthode qui supprime un film.
+
+        :param idFilm: Identifiant du film.
+        :return: True si un film a été supprimé, sinon False.
+        """
         result = self._films.delete_one({"idFilm": idFilm})
         return result.deleted_count == 1
 
-    # ------------------------------------------------------------------ #
-    # Interne : FilmDTO -> document (ids uniquement)
-    # ------------------------------------------------------------------ #
     @staticmethod
     def _toDocument(film: FilmDTO) -> Dict[str, Any]:
         return {
@@ -178,9 +196,6 @@ class FilmDAO:
             "idActors": [actor.idActor for actor in film.actors],
         }
 
-    # ------------------------------------------------------------------ #
-    # Interne : documents -> FilmDTO complets (hydratation)
-    # ------------------------------------------------------------------ #
     def _findFilms(self, query: Dict[str, Any]) -> List[FilmDTO]:
         documents = list(
             self._films.find(query, _NO_MONGO_ID).sort("title", ASCENDING)
@@ -188,7 +203,6 @@ class FilmDAO:
         return self._hydrate(documents)
 
     def _hydrate(self, documents: List[Dict[str, Any]]) -> List[FilmDTO]:
-        """Charge en une seule requête par collection tous les objets liés."""
         directors = self._loadByIds(
             self.DIRECTORS, "idDirector", DirectorDTO,
             (d.get("idDirector") for d in documents),
@@ -292,7 +306,6 @@ class FilmDAO:
         dtoClass: Type[BaseDTO],
         ids: Iterable[Any],
     ) -> Dict[Any, Any]:
-        """Retourne {id: DTO} pour les ids demandés (les ids None sont ignorés)."""
         uniqueIds = {i for i in ids if i is not None}
         if not uniqueIds:
             return {}

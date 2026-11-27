@@ -1,29 +1,29 @@
 class NotFoundError(Exception):
-    """Aucune entité ne correspond à la demande."""
+    """Classe qui représente une ressource introuvable."""
 
 
 class AlreadyExistsError(Exception):
-    """Une entité avec le même identifiant existe déjà."""
+    """Classe qui représente une ressource déjà existante."""
 
 
 class ConflictError(Exception):
-    """Une opération compromettrait la cohérence des références."""
+    """Classe qui représente un conflit avec l'état actuel des ressources."""
 
 
 class InvalidReferenceError(Exception):
-    """Une entité référencée (réalisateur, genre, langue...) n'existe pas."""
+    """Classe qui représente une référence invalide ou absente."""
 
 
 class InvalidRequestError(Exception):
-    """Le corps de la requête est absent, malformé ou incomplet."""
+    """Classe qui représente une requête invalide ou incomplète."""
 
 
 class AuthenticationError(Exception):
-    """Les identifiants d'authentification sont incorrects."""
+    """Classe qui représente un échec d'authentification."""
 
 
 class UserInputError(Exception):
-    """Erreur liée aux informations saisies par l'utilisateur."""
+    """Classe qui représente une donnée utilisateur invalide."""
 
     def __init__(self, message: str):
         super().__init__(message)

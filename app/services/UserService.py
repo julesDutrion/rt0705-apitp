@@ -23,6 +23,7 @@ PASSWORD_REGEX = re.compile(
 
 
 class UserService:
+    """Classe qui représente le service de gestion des utilisateurs."""
 
     def __init__(self, userDAO: UserDAO) -> None:
         self._userDAO = userDAO
@@ -30,6 +31,15 @@ class UserService:
     # --- Création ---------------------------------------------------------
 
     def createUser(self, data: Any) -> UserDTO:
+        """
+        Méthode qui crée un compte utilisateur.
+
+        :param data: Données du compte et confirmation du mot de passe.
+        :return: DTO de l'utilisateur créé.
+        :raises InvalidRequestError: Si la requête contient des champs invalides.
+        :raises UserInputError: Si les informations utilisateur sont invalides.
+        :raises AlreadyExistsError: Si le login ou l'e-mail est déjà utilisé.
+        """
         try:
             user = self._createUserAndHashPassword(data)
             return self._userDAO.create(user)
@@ -41,15 +51,34 @@ class UserService:
     # --- Récupération -----------------------------------------------------
 
     def getAllUsers(self) -> list[UserDTO]:
+        """
+        Méthode qui récupère tous les utilisateurs.
+
+        :return: Liste des DTO d'utilisateurs.
+        """
         return self._userDAO.getAll()
 
     def getUserById(self, idUser: int) -> UserDTO:
+        """
+        Méthode qui récupère un utilisateur par son identifiant.
+
+        :param idUser: Identifiant de l'utilisateur.
+        :return: DTO de l'utilisateur.
+        :raises NotFoundError: Si l'utilisateur n'existe pas.
+        """
         user = self._userDAO.getById(idUser)
         if user is None:
             raise NotFoundError(f"User {idUser} not found")
         return user
 
     def getUserByLogin(self, login: str) -> UserDTO:
+        """
+        Méthode qui récupère un utilisateur par son login.
+
+        :param login: Login recherché.
+        :return: DTO de l'utilisateur.
+        :raises NotFoundError: Si l'utilisateur n'existe pas.
+        """
         user = self._userDAO.getByLogin(login)
         if user is None:
             raise NotFoundError(f"User {login} not found")
@@ -58,6 +87,17 @@ class UserService:
     # --- Modification -----------------------------------------------------
 
     def updateUser(self, idUser: int, data: Any) -> UserDTO:
+        """
+        Méthode qui modifie les informations personnelles d'un utilisateur.
+
+        :param idUser: Identifiant de l'utilisateur à modifier.
+        :param data: Champs personnels à mettre à jour.
+        :return: DTO de l'utilisateur modifié.
+        :raises InvalidRequestError: Si un champ non autorisé est fourni.
+        :raises UserInputError: Si une information personnelle est invalide.
+        :raises NotFoundError: Si l'utilisateur n'existe pas.
+        :raises AlreadyExistsError: Si le login ou l'e-mail est déjà utilisé.
+        """
         if not isinstance(data, dict):
             raise InvalidRequestError("Invalid request body.")
         if any(
@@ -108,6 +148,15 @@ class UserService:
         return user
 
     def updateUserRole(self, idUser: int, role: Any) -> UserDTO:
+        """
+        Méthode qui modifie le rôle d'un utilisateur.
+
+        :param idUser: Identifiant de l'utilisateur.
+        :param role: Nouveau rôle.
+        :return: DTO de l'utilisateur modifié.
+        :raises UserInputError: Si le rôle est invalide.
+        :raises NotFoundError: Si l'utilisateur n'existe pas.
+        """
         try:
             updatedRole = role if isinstance(role, UserRole) else UserRole(role)
         except (TypeError, ValueError):
@@ -122,6 +171,12 @@ class UserService:
     # --- Suppression ------------------------------------------------------
 
     def deleteUser(self, idUser: int) -> None:
+        """
+        Méthode qui supprime un utilisateur.
+
+        :param idUser: Identifiant de l'utilisateur à supprimer.
+        :raises NotFoundError: Si l'utilisateur n'existe pas.
+        """
         if not self._userDAO.delete(idUser):
             raise NotFoundError(f"User {idUser} not found")
 

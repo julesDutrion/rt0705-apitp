@@ -3,3 +3,7 @@
 .git/
 __pycache__/
 *.pyc
+tests/
+**/tests/
+test_*.py
+*_test.py

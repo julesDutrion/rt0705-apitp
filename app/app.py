@@ -1,10 +1,12 @@
 """Racine de composition : assemble les dépendances et crée l'application Flask."""
 
 import os
+from typing import Optional
 
 from flask import Flask
 from flasgger import Swagger
 from pymongo import MongoClient
+from pymongo.database import Database
 
 from .config.database import database as DATABASE_NAME
 from .config.database import uri as MONGO_URI
@@ -23,7 +25,6 @@ from .controllers import (
     createUserBlueprint,
 )
 
-'''Listes des daos'''
 from .dao import (
     ActorDAO,
     ClassificationDAO,
@@ -37,7 +38,6 @@ from .dao import (
     UserDAO,
 )
 
-'''Listes des services'''
 from .services import (
     ActorService,
     ClassificationService,
@@ -54,7 +54,14 @@ from .services import (
 
 from .ErrorHandlers import registerErrorHandlers
 
-def createApp() -> Flask:
+
+def createApp(database: Optional[Database] = None) -> Flask:
+    """
+    Méthode qui crée l'application Flask et assemble ses dépendances.
+
+    :param database: Base MongoDB facultative à injecter.
+    :return: Application Flask configurée.
+    """
     app = Flask(__name__)
 
     # Documentation interactive de l'API (désactivable avec SWAGGER_ENABLED=false).
@@ -473,7 +480,8 @@ def createApp() -> Flask:
                 },
             },
         })
-    database = MongoClient(MONGO_URI)[DATABASE_NAME]
+    if database is None:
+        database = MongoClient(MONGO_URI)[DATABASE_NAME]
 
     # DAOs
     directorDAO = DirectorDAO(database)

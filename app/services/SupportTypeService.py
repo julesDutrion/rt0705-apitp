@@ -14,6 +14,8 @@ from ._input import dtoFromInput
 
 
 class SupportTypeService:
+    """Classe qui représente le service de gestion des types de supports."""
+
     MODES = frozenset({"physical", "digital"})
 
     def __init__(
@@ -23,15 +25,35 @@ class SupportTypeService:
         self._supportDAO = supportDAO
 
     def getAllSupportTypes(self) -> List[SupportTypeDTO]:
+        """
+        Méthode qui récupère tous les types de supports.
+
+        :return: Liste des DTO de types de supports.
+        """
         return self._supportTypeDAO.getAll()
 
     def getSupportTypeById(self, idSupportType: int) -> SupportTypeDTO:
+        """
+        Méthode qui récupère un type de support par son identifiant.
+
+        :param idSupportType: Identifiant du type de support.
+        :return: DTO du type de support.
+        :raises NotFoundError: Si le type de support n'existe pas.
+        """
         supportType = self._supportTypeDAO.getById(idSupportType)
         if supportType is None:
             raise NotFoundError(f"Support type {idSupportType} not found")
         return supportType
 
     def createSupportType(self, data: Any) -> SupportTypeDTO:
+        """
+        Méthode qui crée un type de support.
+
+        :param data: Données du type de support.
+        :return: DTO du type créé.
+        :raises InvalidRequestError: Si le nom ou le mode est invalide.
+        :raises AlreadyExistsError: Si l'identifiant existe déjà.
+        """
         supportType = dtoFromInput(data, SupportTypeDTO.fromDictWithoutId)
         self._validate(supportType)
         try:
@@ -42,6 +64,16 @@ class SupportTypeService:
             )
 
     def updateSupportType(self, idSupportType: int, data: Any) -> SupportTypeDTO:
+        """
+        Méthode qui remplace les données d'un type de support.
+
+        :param idSupportType: Identifiant du type à modifier.
+        :param data: Nouvelles données du type de support.
+        :return: DTO du type modifié.
+        :raises InvalidRequestError: Si les données ou l'identifiant sont invalides.
+        :raises NotFoundError: Si le type de support n'existe pas.
+        :raises ConflictError: Si son mode change alors qu'il est utilisé.
+        """
         if (
             isinstance(data, dict)
             and "idSupportType" in data
@@ -67,6 +99,13 @@ class SupportTypeService:
         return supportType
 
     def deleteSupportType(self, idSupportType: int) -> None:
+        """
+        Méthode qui supprime un type de support non utilisé.
+
+        :param idSupportType: Identifiant du type à supprimer.
+        :raises NotFoundError: Si le type de support n'existe pas.
+        :raises ConflictError: Si le type est utilisé par un support.
+        """
         self.getSupportTypeById(idSupportType)
         if self._supportDAO.existsForType(idSupportType):
             raise ConflictError(

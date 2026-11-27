@@ -20,6 +20,8 @@ from .LanguageDTO import LanguageDTO
 
 @dataclass
 class FilmDTO(BaseDTO):
+    """Classe qui représente un film et ses informations de catalogue."""
+
     title: str
     synopsis: str
     releaseDate: date
@@ -40,6 +42,14 @@ class FilmDTO(BaseDTO):
 
     @classmethod
     def fromDict(cls, data: Dict[str, Any]) -> "FilmDTO":
+        """
+        Méthode qui crée un film à partir d'un dictionnaire.
+
+        :param data: Données du film et de ses références.
+        :return: DTO du film.
+        :raises KeyError: Si un champ obligatoire est absent.
+        :raises ValueError: Si une date ne respecte pas le format ISO.
+        """
         def _date(value: Any) -> date:
             return value if isinstance(value, date) else date.fromisoformat(value)
 
@@ -93,6 +103,14 @@ class FilmDTO(BaseDTO):
 
     @classmethod
     def fromDictWithoutId(cls, data: Dict[str, Any]) -> "FilmDTO":
+        """
+        Méthode qui crée un film sans identifiant à partir d'un dictionnaire.
+
+        :param data: Données du film et de ses références.
+        :return: DTO du film.
+        :raises KeyError: Si un champ obligatoire est absent.
+        :raises ValueError: Si une date ne respecte pas le format ISO.
+        """
         dataWithoutId = dict(data)
         dataWithoutId.pop("idFilm", None)
         return cls.fromDict(dataWithoutId)

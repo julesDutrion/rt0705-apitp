@@ -14,6 +14,8 @@ from .BaseDTO import BaseDTO
 
 @dataclass
 class ActorDTO(BaseDTO):
+    """Classe qui représente un acteur du catalogue."""
+
     firstName: str
     lastName: str
     idActor: Optional[int] = None
@@ -21,6 +23,13 @@ class ActorDTO(BaseDTO):
 
     @classmethod
     def fromDict(cls, data: Dict[str, Any]) -> "ActorDTO":
+        """
+        Méthode qui crée un acteur à partir d'un dictionnaire.
+
+        :param data: Données de l'acteur, identifiant facultatif inclus.
+        :return: DTO de l'acteur.
+        :raises KeyError: Si un prénom ou un nom est absent.
+        """
         return cls(
             idActor=data.get("idActor"),
             firstName=data["firstName"],
@@ -29,4 +38,11 @@ class ActorDTO(BaseDTO):
 
     @classmethod
     def fromDictWithoutId(cls, data: Dict[str, Any]) -> "ActorDTO":
+        """
+        Méthode qui crée un acteur sans identifiant à partir d'un dictionnaire.
+
+        :param data: Données de l'acteur.
+        :return: DTO de l'acteur.
+        :raises KeyError: Si un prénom ou un nom est absent.
+        """
         return cls(firstName=data["firstName"], lastName=data["lastName"])

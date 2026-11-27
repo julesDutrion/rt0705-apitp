@@ -15,6 +15,8 @@ from ._input import dtoFromInput
 
 
 class SupportService:
+    """Classe qui représente le service de gestion des supports."""
+
     def __init__(
         self,
         supportDAO: SupportDAO,
@@ -28,11 +30,23 @@ class SupportService:
         self._loanDAO = loanDAO
 
     def toPublicDict(self, support: SupportDTO) -> Dict[str, Any]:
+        """
+        Méthode qui prépare les données publiques d'un support.
+
+        :param support: DTO du support.
+        :return: Données du support incluant sa disponibilité.
+        """
         return self.toPublicDicts([support])[0]
 
     def toPublicDicts(
         self, supports: List[SupportDTO]
     ) -> List[Dict[str, Any]]:
+        """
+        Méthode qui prépare les données publiques de plusieurs supports.
+
+        :param supports: Supports à convertir.
+        :return: Liste des données publiques des supports.
+        """
         if not supports:
             return []
         borrowedSupportIds = self._loanDAO.getActivePhysicalSupportIds()
@@ -52,20 +66,48 @@ class SupportService:
         return supportDicts
 
     def getAllSupports(self) -> List[SupportDTO]:
+        """
+        Méthode qui récupère tous les supports.
+
+        :return: Liste des DTO de supports.
+        """
         return self._supportDAO.getAll()
 
     def getSupportById(self, idSupport: int) -> SupportDTO:
+        """
+        Méthode qui récupère un support par son identifiant.
+
+        :param idSupport: Identifiant du support.
+        :return: DTO du support.
+        :raises NotFoundError: Si le support n'existe pas.
+        """
         support = self._supportDAO.getById(idSupport)
         if support is None:
             raise NotFoundError(f"Support {idSupport} not found")
         return support
 
     def getSupportsByFilmId(self, idFilm: str) -> List[SupportDTO]:
+        """
+        Méthode qui récupère les supports associés à un film.
+
+        :param idFilm: Identifiant du film.
+        :return: Liste des DTO de supports du film.
+        :raises NotFoundError: Si le film n'existe pas.
+        """
         if not self._filmDAO.existsFilm(idFilm):
             raise NotFoundError(f"Film {idFilm} not found")
         return self._supportDAO.getByFilmId(idFilm)
 
     def createSupport(self, data: Any) -> SupportDTO:
+        """
+        Méthode qui crée un support associé à un film et à un type.
+
+        :param data: Données du support.
+        :return: DTO du support créé.
+        :raises InvalidRequestError: Si les données du support sont invalides.
+        :raises InvalidReferenceError: Si le film ou le type est absent.
+        :raises AlreadyExistsError: Si l'identifiant du support existe déjà.
+        """
         support = dtoFromInput(data, SupportDTO.fromDictWithoutId)
         support.supportType = self._checkReferences(support)
         try:
@@ -76,6 +118,16 @@ class SupportService:
             )
 
     def updateSupport(self, idSupport: int, data: Any) -> SupportDTO:
+        """
+        Méthode qui remplace les données d'un support.
+
+        :param idSupport: Identifiant du support à modifier.
+        :param data: Nouvelles données du support.
+        :return: DTO du support modifié.
+        :raises InvalidRequestError: Si les données ou l'identifiant sont invalides.
+        :raises InvalidReferenceError: Si le film ou le type est absent.
+        :raises NotFoundError: Si le support n'existe pas.
+        """
         if (
             isinstance(data, dict)
             and "idSupport" in data
@@ -92,6 +144,12 @@ class SupportService:
         return support
 
     def deleteSupport(self, idSupport: int) -> None:
+        """
+        Méthode qui supprime un support.
+
+        :param idSupport: Identifiant du support à supprimer.
+        :raises NotFoundError: Si le support n'existe pas.
+        """
         if not self._supportDAO.delete(idSupport):
             raise NotFoundError(f"Support {idSupport} not found")
 

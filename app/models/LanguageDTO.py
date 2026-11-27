@@ -13,6 +13,8 @@ from .BaseDTO import BaseDTO
 
 @dataclass
 class LanguageDTO(BaseDTO):
+    """Classe qui représente une langue du catalogue."""
+
     code: str
     name: str
     idLanguage: Optional[int] = None
@@ -20,6 +22,13 @@ class LanguageDTO(BaseDTO):
 
     @classmethod
     def fromDict(cls, data: Dict[str, Any]) -> "LanguageDTO":
+        """
+        Méthode qui crée une langue à partir d'un dictionnaire.
+
+        :param data: Données de la langue, identifiant facultatif inclus.
+        :return: DTO de la langue.
+        :raises KeyError: Si le code ou le nom est absent.
+        """
         return cls(
             idLanguage=data.get("idLanguage"),
             code=data["code"],
@@ -28,4 +37,11 @@ class LanguageDTO(BaseDTO):
 
     @classmethod
     def fromDictWithoutId(cls, data: Dict[str, Any]) -> "LanguageDTO":
+        """
+        Méthode qui crée une langue sans identifiant à partir d'un dictionnaire.
+
+        :param data: Données de la langue.
+        :return: DTO de la langue.
+        :raises KeyError: Si le code ou le nom est absent.
+        """
         return cls(code=data["code"], name=data["name"])

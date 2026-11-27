@@ -6,6 +6,12 @@ from ..Exceptions import InvalidRequestError, NotFoundError
 
 
 def optionalAuth(function):
+    """
+    Méthode qui autorise une requête avec ou sans jeton JWT valide.
+
+    :param function: Vue Flask à protéger par authentification facultative.
+    :return: Vue Flask décorée.
+    """
     @wraps(function)
     def wrapper(*args, **kwargs):
         authHeader = request.headers.get("Authorization")
@@ -28,6 +34,12 @@ def optionalAuth(function):
 
 
 def requireRole(*allowedRoles):
+    """
+    Méthode qui limite l'accès à une vue Flask aux rôles indiqués.
+
+    :param allowedRoles: Rôles autorisés à accéder à la vue.
+    :return: Décorateur de contrôle des rôles.
+    """
 
     def decorator(function):
 

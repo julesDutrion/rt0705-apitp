@@ -15,6 +15,11 @@ from .Exceptions import (
 
 
 def registerErrorHandlers(app: Flask) -> None:
+    """
+    Méthode qui associe les exceptions de l'API à leurs réponses HTTP.
+
+    :param app: Application Flask à configurer.
+    """
     # --- Exceptions métier ------------------------------------------------
     @app.errorhandler(InvalidRequestError)
     def handleInvalidRequest(error: InvalidRequestError):

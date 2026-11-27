@@ -9,6 +9,8 @@ from .SupportTypeDTO import SupportTypeDTO
 
 @dataclass
 class SupportDTO(BaseDTO):
+    """Classe qui représente un support physique ou numérique associé à un film."""
+
     idFilm: str
     idSupportType: int
     location: Optional[str] = None
@@ -19,6 +21,13 @@ class SupportDTO(BaseDTO):
 
     @classmethod
     def fromDict(cls, data: Dict[str, Any]) -> "SupportDTO":
+        """
+        Méthode qui crée un support à partir d'un dictionnaire.
+
+        :param data: Données du support.
+        :return: DTO du support.
+        :raises KeyError: Si le film ou le type de support est absent.
+        """
         return cls(
             idSupport=data.get("idSupport"),
             idFilm=data["idFilm"],
@@ -29,4 +38,11 @@ class SupportDTO(BaseDTO):
 
     @classmethod
     def fromDictWithoutId(cls, data: Dict[str, Any]) -> "SupportDTO":
+        """
+        Méthode qui crée un support sans identifiant à partir d'un dictionnaire.
+
+        :param data: Données du support.
+        :return: DTO du support.
+        :raises KeyError: Si le film ou le type de support est absent.
+        """
         return cls.fromDict({**data, "idSupport": None})

@@ -15,6 +15,7 @@ from ..Exceptions import (
 
 
 class AuthService:
+    """Classe qui représente le service d'authentification des utilisateurs."""
 
     TOKEN_DURATION = timedelta(hours=1)
     JWT_ALGORITHM = "HS256"
@@ -28,6 +29,15 @@ class AuthService:
     # --- Authentification -----------------------------------------------
 
     def authenticate(self, login: str, password: str) -> UserDTO:
+        """
+        Méthode qui authentifie un utilisateur avec son login et son mot de passe.
+
+        :param login: Login de l'utilisateur.
+        :param password: Mot de passe fourni.
+        :return: DTO de l'utilisateur authentifié.
+        :raises InvalidRequestError: Si le login ou le mot de passe est absent.
+        :raises AuthenticationError: Si les identifiants sont incorrects.
+        """
         if (
             not isinstance(login, str)
             or not login.strip()
@@ -53,6 +63,12 @@ class AuthService:
     # --- Génération du token --------------------------------------------
 
     def generateToken(self, user: UserDTO) -> str:
+        """
+        Méthode qui génère un jeton JWT pour un utilisateur.
+
+        :param user: Utilisateur à authentifier.
+        :return: Jeton JWT signé.
+        """
         now = datetime.now(timezone.utc)
         payload = {"sub": str(user.idUser), "iat": now, "exp": now + self.TOKEN_DURATION}
         return jwt.encode(
@@ -64,6 +80,14 @@ class AuthService:
     # --- Vérification du token ------------------------------------------
 
     def verifyToken(self, token: str) -> UserDTO:
+        """
+        Méthode qui valide un jeton JWT et récupère son utilisateur.
+
+        :param token: Jeton JWT à vérifier.
+        :return: DTO de l'utilisateur associé.
+        :raises InvalidRequestError: Si le jeton ou les données du compte sont invalides.
+        :raises NotFoundError: Si l'utilisateur associé n'existe pas.
+        """
         try:
             payload = jwt.decode(
                 token,

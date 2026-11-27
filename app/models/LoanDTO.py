@@ -8,6 +8,8 @@ from .LoanStatus import LoanStatus
 
 @dataclass
 class LoanDTO(BaseDTO):
+    """Classe qui représente un emprunt de support physique."""
+
     idLoan: int
     idUser: int
     idPhysicalSupport: int
@@ -25,6 +27,15 @@ class LoanDTO(BaseDTO):
 
     @classmethod
     def fromDict(cls, data: Dict[str, Any]) -> "LoanDTO":
+        """
+        Méthode qui crée un emprunt à partir d'un dictionnaire.
+
+        :param data: Données de l'emprunt et de ses dates.
+        :return: DTO de l'emprunt.
+        :raises KeyError: Si un champ obligatoire est absent.
+        :raises TypeError: Si une date n'est pas une valeur datetime.
+        :raises ValueError: Si une date textuelle est invalide.
+        """
         return cls(
             idLoan=data["idLoan"],
             idUser=data["idUser"],
@@ -39,6 +50,12 @@ class LoanDTO(BaseDTO):
         )
 
     def getStatus(self, now: Optional[datetime] = None) -> LoanStatus:
+        """
+        Méthode qui détermine le statut de l'emprunt.
+
+        :param now: Date de référence facultative.
+        :return: Statut calculé de l'emprunt.
+        """
         if self.actualReturnDate is not None:
             return LoanStatus.RETURNED
         currentTime = self._asUTC(now or datetime.now(timezone.utc))
@@ -47,6 +64,11 @@ class LoanDTO(BaseDTO):
         return LoanStatus.IN_PROGRESS
 
     def toPublicDict(self) -> Dict[str, Any]:
+        """
+        Méthode qui convertit l'emprunt en données destinées au client.
+
+        :return: Données de l'emprunt avec son statut et son libellé.
+        """
         data = self.toDict()
         status = self.getStatus()
         data["status"] = status.code
