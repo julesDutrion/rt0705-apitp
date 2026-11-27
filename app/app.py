@@ -98,7 +98,7 @@ def createApp() -> Flask:
                 "UserInput": {
                     "type": "object",
                     "additionalProperties": False,
-                    "required": ["login", "email", "password", "birthDate"],
+                    "required": ["login", "email", "password", "confirmPassword", "birthDate"],
                     "properties": {
                         "login": {"type": "string", "example": "jules"},
                         "email": {"type": "string", "format": "email", "example": "jules@example.com"},
@@ -107,6 +107,12 @@ def createApp() -> Flask:
                             "format": "password",
                             "example": "StrongPass1!",
                             "description": "Au moins 12 caractères avec une minuscule, une majuscule, un chiffre et un symbole.",
+                        },
+                        "confirmPassword": {
+                            "type": "string",
+                            "format": "password",
+                            "example": "StrongPass1!",
+                            "description": "Doit être strictement identique au mot de passe.",
                         },
                         "birthDate": {"type": "string", "format": "date", "example": "2000-01-15"},
                     },

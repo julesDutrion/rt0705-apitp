@@ -42,6 +42,33 @@ def createUserBlueprint(userService: UserService) -> Blueprint:
         user = userService.createUser(request.get_json(silent=True))
         return jsonify(user.toPublicDict()), 201
 
+    @blueprint.get("")
+    @requireRole(UserRole.ADMIN)
+    def getAllUsers():
+        """
+        Récupérer la liste de tous les utilisateurs.
+        ---
+        tags:
+          - Users
+        responses:
+          200:
+            description: Liste des utilisateurs sans leurs mots de passe.
+            schema:
+              type: array
+              items:
+                $ref: '#/definitions/User'
+          401:
+            description: Jeton d'authentification manquant, invalide ou expiré.
+            schema:
+              $ref: '#/definitions/Error'
+          403:
+            description: Réservé aux administrateurs.
+            schema:
+              $ref: '#/definitions/Error'
+        """
+        users = userService.getAllUsers()
+        return jsonify([user.toPublicDict() for user in users]), 200
+
     @blueprint.get("/<int:idUser>")
     @requireRole(UserRole.ADMIN,UserRole.MANAGER,UserRole.USER)
     def getUser(idUser: int):

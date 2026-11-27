@@ -40,6 +40,9 @@ class UserService:
 
     # --- Récupération -----------------------------------------------------
 
+    def getAllUsers(self) -> list[UserDTO]:
+        return self._userDAO.getAll()
+
     def getUserById(self, idUser: int) -> UserDTO:
         user = self._userDAO.getById(idUser)
         if user is None:
@@ -137,6 +140,18 @@ class UserService:
                 "Le mot de passe ne doit pas dépasser 72 octets."
             )
 
+    def _validatePasswordConfirmation(
+        self, password: Any, confirmPassword: Any
+    ) -> None:
+        if not isinstance(confirmPassword, str) or not confirmPassword:
+            raise UserInputError(
+                "La confirmation du mot de passe est obligatoire."
+            )
+        if password != confirmPassword:
+            raise UserInputError(
+                "Les deux mots de passe doivent être identiques."
+            )
+
     def _validateLogin(self, login: str, excludeUserId: int = None) -> None:
         if not isinstance(login, str) or not login.strip():
             raise UserInputError("Le login est invalide.")
@@ -165,19 +180,28 @@ class UserService:
         if not isinstance(data, dict):
             raise InvalidRequestError("Invalid request body.")
         if any(
-            field not in {"login", "email", "password", "birthDate"}
+            field not in {
+                "login",
+                "email",
+                "password",
+                "confirmPassword",
+                "birthDate",
+            }
             for field in data
         ):
             raise InvalidRequestError(
-                "Only login, email, password, and birthDate can be provided."
+                "Only login, email, password, confirmPassword, "
+                "and birthDate can be provided."
             )
         login = data.get("login")
         email = data.get("email")
         password = data.get("password")
+        confirmPassword = data.get("confirmPassword")
         birthDate = data.get("birthDate")
         login = login.strip() if isinstance(login, str) else login
         email = email.strip() if isinstance(email, str) else email
         self._validatePassword(password)
+        self._validatePasswordConfirmation(password, confirmPassword)
         self._validateLogin(login)
         self._validateEmail(email)
         try:

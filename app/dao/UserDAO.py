@@ -14,6 +14,8 @@ class UserDAO:
     def __init__(self, database: Database) -> None:
         self._collection = database[self.COLLECTION_NAME]
         self._collection.create_index([("idUser", ASCENDING)], unique=True)
+        self._collection.create_index([("login", ASCENDING)], unique=True)
+        self._collection.create_index([("email", ASCENDING)], unique=True)
 
     def getAll(self) -> List[UserDTO]:
         return self._find({})
