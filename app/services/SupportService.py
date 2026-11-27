@@ -1,9 +1,9 @@
-from typing import Any, List
+from typing import Any, Dict, List
 from urllib.parse import urlparse
 
 from pymongo.errors import DuplicateKeyError
 
-from ..dao import FilmDAO, SupportDAO, SupportTypeDAO
+from ..dao import FilmDAO, LoanDAO, SupportDAO, SupportTypeDAO
 from ..Exceptions import (
     AlreadyExistsError,
     InvalidReferenceError,
@@ -20,10 +20,36 @@ class SupportService:
         supportDAO: SupportDAO,
         filmDAO: FilmDAO,
         supportTypeDAO: SupportTypeDAO,
+        loanDAO: LoanDAO,
     ) -> None:
         self._supportDAO = supportDAO
         self._filmDAO = filmDAO
         self._supportTypeDAO = supportTypeDAO
+        self._loanDAO = loanDAO
+
+    def toPublicDict(self, support: SupportDTO) -> Dict[str, Any]:
+        return self.toPublicDicts([support])[0]
+
+    def toPublicDicts(
+        self, supports: List[SupportDTO]
+    ) -> List[Dict[str, Any]]:
+        if not supports:
+            return []
+        borrowedSupportIds = self._loanDAO.getActivePhysicalSupportIds()
+        supportDicts = []
+        for support in supports:
+            data = support.toDict()
+            isPhysical = (
+                support.supportType is not None
+                and support.supportType.mode == "physical"
+            )
+            data["isAvailable"] = (
+                support.idSupport not in borrowedSupportIds
+                if isPhysical
+                else None
+            )
+            supportDicts.append(data)
+        return supportDicts
 
     def getAllSupports(self) -> List[SupportDTO]:
         return self._supportDAO.getAll()

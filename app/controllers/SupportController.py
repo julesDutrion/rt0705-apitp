@@ -24,7 +24,7 @@ def createSupportBlueprint(supportService: SupportService) -> Blueprint:
                 $ref: '#/definitions/Support'
         """
         supports = supportService.getAllSupports()
-        return jsonify([support.toDict() for support in supports]), 200
+        return jsonify(supportService.toPublicDicts(supports)), 200
 
     @blueprint.get("/film/<string:idFilm>")
     def getSupportsByFilm(idFilm: str):
@@ -52,7 +52,7 @@ def createSupportBlueprint(supportService: SupportService) -> Blueprint:
               $ref: '#/definitions/Error'
         """
         supports = supportService.getSupportsByFilmId(idFilm)
-        return jsonify([support.toDict() for support in supports]), 200
+        return jsonify(supportService.toPublicDicts(supports)), 200
 
     @blueprint.get("/<int:idSupport>")
     def getSupport(idSupport: int):
@@ -78,7 +78,7 @@ def createSupportBlueprint(supportService: SupportService) -> Blueprint:
               $ref: '#/definitions/Error'
         """
         support = supportService.getSupportById(idSupport)
-        return jsonify(support.toDict()), 200
+        return jsonify(supportService.toPublicDict(support)), 200
 
     @blueprint.post("")
     @requireRole(UserRole.ADMIN,UserRole.MANAGER)
@@ -116,7 +116,7 @@ def createSupportBlueprint(supportService: SupportService) -> Blueprint:
               $ref: '#/definitions/Error'
         """
         support = supportService.createSupport(request.get_json(silent=True))
-        return jsonify(support.toDict()), 201
+        return jsonify(supportService.toPublicDict(support)), 201
 
     @blueprint.put("/<int:idSupport>")
     @requireRole(UserRole.ADMIN,UserRole.MANAGER)
@@ -159,7 +159,7 @@ def createSupportBlueprint(supportService: SupportService) -> Blueprint:
         updated = supportService.updateSupport(
             idSupport, request.get_json(silent=True)
         )
-        return jsonify(updated.toDict()), 200
+        return jsonify(supportService.toPublicDict(updated)), 200
 
     @blueprint.delete("/<int:idSupport>")
     @requireRole(UserRole.ADMIN,UserRole.MANAGER)

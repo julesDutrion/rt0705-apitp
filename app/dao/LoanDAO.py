@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Set
 
 from pymongo import ASCENDING, ReturnDocument
 from pymongo.database import Database
@@ -65,6 +65,13 @@ class LoanDAO:
             },
             limit=1,
         ) > 0
+
+    def getActivePhysicalSupportIds(self) -> Set[int]:
+        return set(
+            self._collection.distinct(
+                "idPhysicalSupport", _ACTIVE_LOAN_FILTER
+            )
+        )
 
     def nextId(self) -> int:
         counter = self._counterCollection.find_one_and_update(

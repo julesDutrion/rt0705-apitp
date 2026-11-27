@@ -256,7 +256,12 @@ def createApp() -> Flask:
                 "Support": {
                     "type": "object",
                     "description": "Un exemplaire physique ou un accès numérique associé à un film.",
-                    "required": ["idSupport", "idFilm", "idSupportType"],
+                    "required": [
+                        "idSupport",
+                        "idFilm",
+                        "idSupportType",
+                        "isAvailable",
+                    ],
                     "properties": {
                         "idSupport": {"type": "integer", "example": 1},
                         "idFilm": {"type": "string", "example": "film-001"},
@@ -272,6 +277,11 @@ def createApp() -> Flask:
                             "description": "URL HTTP(S), présente pour un type digital.",
                         },
                         "supportType": {"$ref": "#/definitions/SupportType"},
+                        "isAvailable": {
+                            "type": "boolean",
+                            "x-nullable": True,
+                            "description": "Disponibilité calculée pour un support physique; null pour un support numérique.",
+                        },
                     },
                 },
                 "SupportInput": {
@@ -485,7 +495,9 @@ def createApp() -> Flask:
     genreService = GenreService(genreDAO)
     languageService = LanguageService(languageDAO)
     classificationService = ClassificationService(classificationDAO)
-    supportService = SupportService(supportDAO, filmDAO, supportTypeDAO)
+    supportService = SupportService(
+        supportDAO, filmDAO, supportTypeDAO, loanDAO
+    )
     supportTypeService = SupportTypeService(supportTypeDAO, supportDAO)
     userService = UserService(userDAO)
     loanService = LoanService(loanDAO, userDAO, supportDAO)
