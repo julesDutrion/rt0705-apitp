@@ -4,6 +4,7 @@ from .DirectorDAO import DirectorDAO
 from .FilmsDAO import FilmDAO
 from .GenreDAO import GenreDAO
 from .LanguageDAO import LanguageDAO
+from .LoanDAO import LoanDAO
 from .SupportDAO import SupportDAO
 from .SupportTypeDAO import SupportTypeDAO
 from .UserDAO import UserDAO
@@ -15,6 +16,7 @@ __all__ = [
     "FilmDAO",
     "GenreDAO",
     "LanguageDAO",
+    "LoanDAO",
     "SupportDAO",
     "SupportTypeDAO",
     "UserDAO",

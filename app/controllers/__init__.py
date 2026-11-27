@@ -5,6 +5,7 @@ from .DirectorController import createDirectorBlueprint
 from .FilmController import createFilmBlueprint
 from .GenreController import createGenreBlueprint
 from .LanguageController import createLanguageBlueprint
+from .LoanController import createLoanBlueprint
 from .SupportController import createSupportBlueprint
 from .SupportTypeController import createSupportTypeBlueprint
 from .UserController import createUserBlueprint
@@ -17,6 +18,7 @@ __all__ = [
     "createFilmBlueprint",
     "createGenreBlueprint",
     "createLanguageBlueprint",
+    "createLoanBlueprint",
     "createSupportBlueprint",
     "createSupportTypeBlueprint",
     "createUserBlueprint",

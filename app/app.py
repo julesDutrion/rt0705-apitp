@@ -17,6 +17,7 @@ from .controllers import (
     createFilmBlueprint,
     createGenreBlueprint,
     createLanguageBlueprint,
+    createLoanBlueprint,
     createSupportBlueprint,
     createSupportTypeBlueprint,
     createUserBlueprint,
@@ -30,6 +31,7 @@ from .dao import (
     FilmDAO,
     GenreDAO,
     LanguageDAO,
+    LoanDAO,
     SupportDAO,
     SupportTypeDAO,
     UserDAO,
@@ -43,6 +45,7 @@ from .services import (
     FilmService,
     GenreService,
     LanguageService,
+    LoanService,
     SupportService,
     SupportTypeService,
     UserService,
@@ -290,6 +293,70 @@ def createApp() -> Flask:
                         },
                     },
                 },
+                "Loan": {
+                    "type": "object",
+                    "description": "L'état est calculé à la lecture; aucune notification ou tâche périodique n'est nécessaire.",
+                    "required": [
+                        "idLoan",
+                        "idUser",
+                        "idPhysicalSupport",
+                        "startDate",
+                        "expectedReturnDate",
+                        "actualReturnDate",
+                        "status",
+                        "statusLabel",
+                        "supportType",
+                    ],
+                    "properties": {
+                        "idLoan": {"type": "integer", "example": 1},
+                        "idUser": {"type": "integer", "example": 3},
+                        "idPhysicalSupport": {"type": "integer", "example": 12},
+                        "startDate": {
+                            "type": "string",
+                            "format": "date-time",
+                            "example": "2026-11-27T18:00:00+00:00",
+                        },
+                        "expectedReturnDate": {
+                            "type": "string",
+                            "format": "date-time",
+                            "example": "2026-12-27T18:00:00+00:00",
+                            "description": "Calculée 30 jours après startDate (règle LOAN_DURATION_DAYS).",
+                        },
+                        "actualReturnDate": {
+                            "type": "string",
+                            "format": "date-time",
+                            "x-nullable": True,
+                            "example": None,
+                        },
+                        "status": {
+                            "type": "string",
+                            "enum": ["IN_PROGRESS", "OVERDUE", "RETURNED"],
+                            "example": "IN_PROGRESS",
+                        },
+                        "statusLabel": {
+                            "type": "string",
+                            "enum": ["En cours", "En retard", "Retourné"],
+                            "example": "En cours",
+                            "description": "Libellé français du statut.",
+                        },
+                        "supportType": {
+                            "$ref": "#/definitions/SupportType",
+                            "description": "Type du support physique emprunté.",
+                        },
+                    },
+                },
+                "LoanInput": {
+                    "type": "object",
+                    "additionalProperties": False,
+                    "required": ["idPhysicalSupport"],
+                    "properties": {
+                        "idPhysicalSupport": {
+                            "type": "integer",
+                            "example": 12,
+                            "description": "Identifiant du support physique à emprunter.",
+                        },
+                    },
+                },
                 "SupportType": {
                     "type": "object",
                     "description": "Type de support disponible pour les films.",
@@ -408,6 +475,7 @@ def createApp() -> Flask:
     supportDAO = SupportDAO(database)
     supportTypeDAO = SupportTypeDAO(database)
     userDAO = UserDAO(database)
+    loanDAO = LoanDAO(database)
 
     # Services
     authService = AuthService(userDAO)
@@ -420,6 +488,7 @@ def createApp() -> Flask:
     supportService = SupportService(supportDAO, filmDAO, supportTypeDAO)
     supportTypeService = SupportTypeService(supportTypeDAO, supportDAO)
     userService = UserService(userDAO)
+    loanService = LoanService(loanDAO, userDAO, supportDAO)
     filmService = FilmService(
         filmDAO, directorDAO, genreDAO, languageDAO, classificationDAO, supportDAO
     )
@@ -433,6 +502,7 @@ def createApp() -> Flask:
     app.register_blueprint(createFilmBlueprint(filmService))
     app.register_blueprint(createSupportBlueprint(supportService))
     app.register_blueprint(createSupportTypeBlueprint(supportTypeService))
+    app.register_blueprint(createLoanBlueprint(loanService))
     app.register_blueprint(createUserBlueprint(userService))
     app.register_blueprint(createAuthBlueprint(authService))
 

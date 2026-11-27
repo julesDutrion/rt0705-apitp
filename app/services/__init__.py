@@ -5,6 +5,7 @@ from .DirectorService import DirectorService
 from .FilmService import FilmService
 from .GenreService import GenreService
 from .LanguageService import LanguageService
+from .LoanService import LoanService
 from .SupportService import SupportService
 from .SupportTypeService import SupportTypeService
 from .UserService import UserService
@@ -17,6 +18,7 @@ __all__ = [
     "FilmService",
     "GenreService",
     "LanguageService",
+    "LoanService",
     "SupportService",
     "SupportTypeService",
     "UserService",

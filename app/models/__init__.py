@@ -5,6 +5,8 @@ from .DirectorDTO import DirectorDTO
 from .FilmDTO import FilmDTO
 from .GenreDTO import GenreDTO
 from .LanguageDTO import LanguageDTO
+from .LoanDTO import LoanDTO
+from .LoanStatus import LoanStatus
 from .RoleEnum import UserRole
 from .SupportDTO import SupportDTO
 from .SupportTypeDTO import SupportTypeDTO
@@ -18,6 +20,8 @@ __all__ = [
     "FilmDTO",
     "GenreDTO",
     "LanguageDTO",
+    "LoanDTO",
+    "LoanStatus",
     "UserRole",
     "SupportDTO",
     "SupportTypeDTO",

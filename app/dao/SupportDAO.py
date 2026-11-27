@@ -31,6 +31,15 @@ class SupportDAO:
         )
         return self._hydrate([document])[0] if document else None
 
+    def getByIds(self, idSupports: Iterable[int]) -> List[SupportDTO]:
+        supportIds = set(idSupports)
+        if not supportIds:
+            return []
+        documents = self._collection.find(
+            {"idSupport": {"$in": list(supportIds)}}, _NO_MONGO_ID
+        ).sort("idSupport", ASCENDING)
+        return self._hydrate(list(documents))
+
     def getByFilmId(self, idFilm: str) -> List[SupportDTO]:
         documents = self._collection.find(
             {"idFilm": idFilm}, _NO_MONGO_ID
