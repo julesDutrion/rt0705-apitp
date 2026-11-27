@@ -5,6 +5,28 @@ from flask import current_app, g, jsonify, request
 from ..Exceptions import InvalidRequestError, NotFoundError
 
 
+def optionalAuth(function):
+    @wraps(function)
+    def wrapper(*args, **kwargs):
+        authHeader = request.headers.get("Authorization")
+        if not authHeader:
+            g.currentUser = None
+            return function(*args, **kwargs)
+
+        if not authHeader.startswith("Bearer "):
+            return jsonify({"error": "Token invalide ou expiré."}), 401
+
+        token = authHeader.split(" ", 1)[1]
+        authService = current_app.extensions["authService"]
+        try:
+            g.currentUser = authService.verifyToken(token)
+        except (InvalidRequestError, NotFoundError):
+            return jsonify({"error": "Token invalide ou expiré."}), 401
+        return function(*args, **kwargs)
+
+    return wrapper
+
+
 def requireRole(*allowedRoles):
 
     def decorator(function):

@@ -76,7 +76,12 @@ class AuthService:
         except (jwt.InvalidTokenError, KeyError, TypeError, ValueError):
             raise InvalidRequestError("Session invalide ou expiré.")
 
-        user = self._userDAO.getById(idUser)
+        try:
+            user = self._userDAO.getById(idUser)
+        except (KeyError, TypeError, ValueError) as error:
+            raise InvalidRequestError(
+                "Les informations du compte sont invalides."
+            ) from error
 
         if user is None:
             raise NotFoundError("Utilisateur introuvable.")

@@ -38,7 +38,7 @@ def createLoanBlueprint(loanService: LoanService) -> Blueprint:
             schema:
               $ref: '#/definitions/Error'
           404:
-            description: Utilisateur ou support introuvable.
+            description: Utilisateur, support ou film introuvable ou non accessible selon l'âge.
             schema:
               $ref: '#/definitions/Error'
           409:

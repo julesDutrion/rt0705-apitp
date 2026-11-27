@@ -31,6 +31,26 @@ class ClassificationDAO:
     def getByMinAge(self, minAge: int) -> List[ClassificationDTO]:
         return self._find({"minAge": minAge})
 
+    def getIdsAllowedForAge(self, age: int) -> List[int]:
+        documents = self._collection.find(
+            {
+                "minAge": {
+                    "$type": "number",
+                    "$gte": 0,
+                    "$lte": age,
+                }
+            },
+            {"idClassification": 1, "minAge": 1, "_id": 0},
+        )
+        return [
+            document["idClassification"]
+            for document in documents
+            if type(document.get("minAge")) is int
+            and 0 <= document["minAge"] <= age
+            and type(document.get("idClassification")) is int
+            and document["idClassification"] > 0
+        ]
+
     def create(self, classification: ClassificationDTO) -> ClassificationDTO:
         """Génère un identifiant entier absent de la collection."""
         if classification.idClassification is None:

@@ -1,14 +1,16 @@
-from typing import List
+from typing import List, Optional
 
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, g, jsonify, request
 from werkzeug.datastructures import MultiDict
 
 from ..models import FilmDTO
 from ..services import FilmService
-from ..decorators import requireRole
+from ..decorators import optionalAuth, requireRole
 from ..models import UserRole
 
-def _findFilms(filmService: FilmService, args: MultiDict) -> List[FilmDTO]:
+def _findFilms(
+    filmService: FilmService, args: MultiDict, idUser: Optional[int] = None
+) -> List[FilmDTO]:
     filters = {
         "title": args.get("title"),
         "genre": args.get("genre", type=int),
@@ -18,20 +20,23 @@ def _findFilms(filmService: FilmService, args: MultiDict) -> List[FilmDTO]:
         "supportType": args.get("supportType", type=int),
     }
 
-    return filmService.searchFilms(filters)
+    return filmService.searchFilms(filters, idUser)
 
 
 def createFilmBlueprint(filmService: FilmService) -> Blueprint:
     blueprint = Blueprint("films", __name__, url_prefix="/films")
 
     @blueprint.get("")
+    @optionalAuth
     def getFilms():
         """
         Rechercher les films selon un ou plusieurs critères.
         ---
         tags:
           - Films
-        security: []
+        security:
+          - Bearer: []
+          - {}
         parameters:
           - name: title
             in: query
@@ -70,18 +75,31 @@ def createFilmBlueprint(filmService: FilmService) -> Blueprint:
               type: array
               items:
                 $ref: '#/definitions/Film'
+          401:
+            description: Jeton fourni invalide ou expiré.
+            schema:
+              $ref: '#/definitions/Error'
+          422:
+            description: Les informations du compte authentifié sont invalides.
+            schema:
+              $ref: '#/definitions/Error'
         """
-        films = _findFilms(filmService, request.args)
+        currentUser = g.currentUser
+        idUser = currentUser.idUser if currentUser is not None else None
+        films = _findFilms(filmService, request.args, idUser)
         return jsonify([film.toDict() for film in films]), 200
 
     @blueprint.get("/<string:idFilm>")
+    @optionalAuth
     def getFilm(idFilm: str):
         """
         Récupérer un film par son identifiant.
         ---
         tags:
           - Films
-        security: []
+        security:
+          - Bearer: []
+          - {}
         parameters:
           - name: idFilm
             in: path
@@ -97,8 +115,18 @@ def createFilmBlueprint(filmService: FilmService) -> Blueprint:
             description: Film introuvable ou non accessible.
             schema:
               $ref: '#/definitions/Error'
+          401:
+            description: Jeton fourni invalide ou expiré.
+            schema:
+              $ref: '#/definitions/Error'
+          422:
+            description: Les informations du compte authentifié sont invalides.
+            schema:
+              $ref: '#/definitions/Error'
         """
-        film = filmService.getFilmById(idFilm)
+        currentUser = g.currentUser
+        idUser = currentUser.idUser if currentUser is not None else None
+        film = filmService.getFilmById(idFilm, idUser)
         return jsonify(film.toDict()), 200
 
     @blueprint.post("")

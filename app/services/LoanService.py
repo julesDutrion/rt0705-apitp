@@ -11,6 +11,7 @@ from ..Exceptions import (
     NotFoundError,
 )
 from ..models import LoanDTO, SupportDTO
+from .FilmService import FilmService
 
 
 LOAN_DURATION_DAYS = 30
@@ -22,10 +23,12 @@ class LoanService:
         loanDAO: LoanDAO,
         userDAO: UserDAO,
         supportDAO: SupportDAO,
+        filmService: FilmService,
     ) -> None:
         self._loanDAO = loanDAO
         self._userDAO = userDAO
         self._supportDAO = supportDAO
+        self._filmService = filmService
 
     def borrow(self, idUser: int, data: Any) -> LoanDTO:
         if not isinstance(data, dict) or set(data) != {"idPhysicalSupport"}:
@@ -53,6 +56,7 @@ class LoanService:
             raise InvalidReferenceError(
                 f"Support {idPhysicalSupport} is not physical"
             )
+        self._filmService.getFilmForUser(support.idFilm, idUser)
         if self._loanDAO.hasActiveLoanForSupport(idPhysicalSupport):
             raise ConflictError(
                 f"Physical support {idPhysicalSupport} is already borrowed"

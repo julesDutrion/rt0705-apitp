@@ -500,9 +500,17 @@ def createApp() -> Flask:
     )
     supportTypeService = SupportTypeService(supportTypeDAO, supportDAO)
     userService = UserService(userDAO)
-    loanService = LoanService(loanDAO, userDAO, supportDAO)
     filmService = FilmService(
-        filmDAO, directorDAO, genreDAO, languageDAO, classificationDAO, supportDAO
+        filmDAO,
+        directorDAO,
+        genreDAO,
+        languageDAO,
+        classificationDAO,
+        supportDAO,
+        userDAO,
+    )
+    loanService = LoanService(
+        loanDAO, userDAO, supportDAO, filmService
     )
 
     # Controllers

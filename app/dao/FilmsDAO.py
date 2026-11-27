@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import re
 import uuid
+import logging
 from datetime import date
 from typing import Any, Dict, Iterable, List, Optional, Type
 
@@ -29,6 +30,7 @@ from ..models import (
 
 # On n'expose jamais l'_id interne de MongoDB : l'identifiant métier est idFilm.
 _NO_MONGO_ID: Dict[str, int] = {"_id": 0}
+_LOGGER = logging.getLogger(__name__)
 
 
 class FilmDAO:
@@ -191,9 +193,8 @@ class FilmDAO:
             self.DIRECTORS, "idDirector", DirectorDTO,
             (d.get("idDirector") for d in documents),
         )
-        classifications = self._loadByIds(
-            self.CLASSIFICATIONS, "idClassification", ClassificationDTO,
-            (d.get("idClassification") for d in documents),
+        classifications = self._loadClassifications(
+            d.get("idClassification") for d in documents
         )
         languages = self._loadByIds(
             self.LANGUAGES, "idLanguage", LanguageDTO,
@@ -210,6 +211,24 @@ class FilmDAO:
 
         films: List[FilmDTO] = []
         for doc in documents:
+            idClassification = doc.get("idClassification")
+            classification = (
+                classifications.get(idClassification)
+                if type(idClassification) is int
+                else None
+            )
+            if (
+                idClassification is not None
+                and (
+                    type(idClassification) is not int
+                    or idClassification not in classifications
+                )
+            ):
+                _LOGGER.warning(
+                    "Film %s references a missing or invalid classification %r",
+                    doc.get("idFilm"),
+                    idClassification,
+                )
             films.append(
                 FilmDTO(
                     idFilm=doc["idFilm"],
@@ -220,7 +239,7 @@ class FilmDAO:
                     posterUrl=doc["posterUrl"],
                     addedDate=self._toDate(doc["addedDate"]),
                     director=directors.get(doc.get("idDirector")),
-                    classification=classifications.get(doc.get("idClassification")),
+                    classification=classification,
                     nativeLanguage=languages.get(doc.get("idNativeLanguage")),
                     languages=[
                         languages[i] for i in doc.get("idLanguages", []) if i in languages
@@ -230,6 +249,41 @@ class FilmDAO:
                 )
             )
         return films
+
+    def _loadClassifications(
+        self, ids: Iterable[Any]
+    ) -> Dict[Any, ClassificationDTO]:
+        uniqueIds = {
+            idClassification
+            for idClassification in ids
+            if type(idClassification) is int and idClassification > 0
+        }
+        if not uniqueIds:
+            return {}
+
+        documents = self._database[self.CLASSIFICATIONS].find(
+            {"idClassification": {"$in": list(uniqueIds)}},
+            _NO_MONGO_ID,
+        )
+        classifications: Dict[Any, ClassificationDTO] = {}
+        for document in documents:
+            idClassification = document.get("idClassification")
+            minAge = document.get("minAge")
+            if (
+                type(idClassification) is not int
+                or idClassification < 1
+                or type(minAge) is not int
+                or minAge < 0
+            ):
+                _LOGGER.warning(
+                    "Ignoring invalid classification record %r",
+                    idClassification,
+                )
+                continue
+            classifications[idClassification] = ClassificationDTO.fromDict(
+                document
+            )
+        return classifications
 
     def _loadByIds(
         self,

@@ -1,4 +1,5 @@
 
+from datetime import date
 from typing import Any, Dict, List, Optional
 
 from pymongo.errors import DuplicateKeyError
@@ -10,6 +11,7 @@ from ..dao import (
     GenreDAO,
     LanguageDAO,
     SupportDAO,
+    UserDAO,
 )
 from ..Exceptions import (
     AlreadyExistsError,
@@ -18,7 +20,7 @@ from ..Exceptions import (
     InvalidRequestError,
     NotFoundError,
 )
-from ..models import FilmDTO
+from ..models import FilmDTO, UserDTO, UserRole
 from ._input import dtoFromInput
 
 
@@ -31,6 +33,7 @@ class FilmService:
         languageDAO: LanguageDAO,
         classificationDAO: ClassificationDAO,
         supportDAO: SupportDAO,
+        userDAO: UserDAO,
     ) -> None:
         self._filmDAO = filmDAO
         self._directorDAO = directorDAO
@@ -38,17 +41,33 @@ class FilmService:
         self._languageDAO = languageDAO
         self._classificationDAO = classificationDAO
         self._supportDAO = supportDAO
+        self._userDAO = userDAO
 
     # ------------------------------------------------------------------ #
     # Lecture
     # ------------------------------------------------------------------ #
-    def getAllFilms(self) -> List[FilmDTO]:
-        return self.searchFilms({})
+    def getAllFilms(self, idUser: Optional[int] = None) -> List[FilmDTO]:
+        return self.getFilmsForUser(idUser, {})
 
     def searchFilms(
         self,
         filters: Dict[str, Any],
-        allowedClassificationIds: Optional[List[int]] = None
+        idUser: Optional[int] = None,
+    ) -> List[FilmDTO]:
+        return self.getFilmsForUser(idUser, filters)
+
+    def getFilmsForUser(
+        self,
+        idUser: Optional[int],
+        filters: Optional[Dict[str, Any]] = None,
+    ) -> List[FilmDTO]:
+        allowedClassificationIds = self._getAllowedClassificationIds(idUser)
+        return self._searchFilms(filters or {}, allowedClassificationIds)
+
+    def _searchFilms(
+        self,
+        filters: Dict[str, Any],
+        allowedClassificationIds: Optional[List[int]],
     ) -> List[FilmDTO]:
         """
         Recherche des films selon plusieurs critères cumulables.
@@ -79,8 +98,9 @@ class FilmService:
     def getFilmById(
         self,
         idFilm: str,
-        allowedClassificationIds: Optional[List[int]] = None
+        idUser: Optional[int] = None,
     ) -> FilmDTO:
+        allowedClassificationIds = self._getAllowedClassificationIds(idUser)
         film = self._filmDAO.getFilmById(idFilm)
 
         if film is None:
@@ -91,12 +111,46 @@ class FilmService:
             allowedClassificationIds is not None
             and (
                 film.classification is None
-                or film.classification.idClassification not in allowedClassificationIds
+                or type(film.classification.idClassification) is not int
+                or film.classification.idClassification
+                not in allowedClassificationIds
             )
         ):
             raise NotFoundError(f"Film {idFilm} not found")
 
         return self._attachSupports([film])[0]
+
+    def getFilmForUser(self, idFilm: str, idUser: int) -> FilmDTO:
+        return self.getFilmById(idFilm, idUser)
+
+    def calculateUserAge(self, user: UserDTO) -> int:
+        if type(user.birthDate) is not date or user.birthDate > date.today():
+            raise InvalidReferenceError(
+                f"User {user.idUser} has an invalid birth date"
+            )
+        return user.calculateAge()
+
+    def _getAllowedClassificationIds(
+        self, idUser: Optional[int]
+    ) -> Optional[List[int]]:
+        if idUser is None:
+            return None
+        try:
+            user = self._userDAO.getById(idUser)
+        except (KeyError, TypeError, ValueError) as error:
+            raise InvalidReferenceError(
+                f"User {idUser} has invalid account data"
+            ) from error
+        if user is None:
+            raise NotFoundError(f"User {idUser} not found")
+
+        if user.role in {UserRole.MANAGER, UserRole.ADMIN}:
+            return None
+        if user.role != UserRole.USER:
+            raise InvalidReferenceError(f"User {idUser} has an invalid role")
+
+        age = self.calculateUserAge(user)
+        return self._classificationDAO.getIdsAllowedForAge(age)
 
     # ------------------------------------------------------------------ #
     # Écriture
